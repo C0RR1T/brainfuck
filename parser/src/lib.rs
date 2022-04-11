@@ -1,28 +1,8 @@
+extern crate core;
+
+use std::vec::IntoIter;
+
 use lexer::Token;
-
-pub fn parse(tokens: Vec<Token>) -> Vec<Instruction> {
-    let mut iter = tokens.iter();
-    let mut instructions = Vec::new();
-
-    while let Some(token) = iter.next() {
-        match token {
-            Token::OpenLoop => {
-                let mut loop_content = Vec::new();
-                for token in &mut iter {
-                    if *token == Token::CloseLoop {
-                        break;
-                    } else {
-                        loop_content.push(parse_token(token))
-                    }
-                }
-                instructions.push(Instruction::Loop(loop_content))
-            }
-            other => instructions.push(parse_token(other)),
-        }
-    }
-
-    instructions
-}
 
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Instruction {
@@ -33,4 +13,51 @@ pub enum Instruction {
     Right,
     Output,
     Input,
+}
+
+pub struct Parser {
+    tokens: IntoIter<Token>,
+    instructions: Vec<Instruction>,
+}
+
+impl Parser {
+    pub fn new(tokens: Vec<Token>) -> Self {
+        Parser {
+            tokens: tokens.into_iter(),
+            instructions: Vec::new(),
+        }
+    }
+
+    pub fn parse(&mut self) -> Vec<Instruction> {
+        while let Some(token) = self.tokens.next() {
+            let instruction = self.parse_token(&token);
+            self.instructions.push(instruction);
+        }
+        self.instructions.to_vec()
+    }
+
+    fn parse_token(&mut self, token: &Token) -> Instruction {
+        match token {
+            Token::OpenLoop => self.parse_loop(),
+            Token::CloseLoop => panic!("Unexpected Closing Bracket."),
+            Token::Add => Instruction::Add,
+            Token::Subtract => Instruction::Subtract,
+            Token::Left => Instruction::Left,
+            Token::Right => Instruction::Right,
+            Token::Output => Instruction::Output,
+            Token::Input => Instruction::Input,
+        }
+    }
+
+    fn parse_loop(&mut self) -> Instruction {
+        let mut loop_instructions = Vec::new();
+        while let Some(token) = self.tokens.next() {
+            if token == Token::CloseLoop {
+                break;
+            } else {
+                loop_instructions.push(self.parse_token(&token));
+            }
+        }
+        Instruction::Loop(loop_instructions)
+    }
 }

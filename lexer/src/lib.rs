@@ -1,3 +1,6 @@
+use std::fmt;
+use std::fmt::Formatter;
+
 pub fn lex(input: &str) -> Vec<Token> {
     input
         .split("")
@@ -25,4 +28,19 @@ pub enum Token {
     CloseLoop,
     Output,
     Input,
+}
+
+impl fmt::Display for Token {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            Token::Left => write!(f, "<"),
+            Token::Right => write!(f, ">"),
+            Token::Add => write!(f, "+"),
+            Token::Subtract => write!(f, "-"),
+            Token::OpenLoop => write!(f, "["),
+            Token::CloseLoop => write!(f, "]"),
+            Token::Output => write!(f, "."),
+            Token::Input => write!(f, ","),
+        }
+    }
 }

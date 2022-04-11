@@ -1,17 +1,16 @@
+use std::io::Write;
 use std::{env, fs};
 
 use lexer::lex;
-use parser::{parse, Instruction};
+use parser::{Instruction, Parser};
 
 fn main() {
     let file = env::args().nth(1).expect("Please provide an input file.");
 
-    println!("{}", file);
-
     let file = fs::read_to_string(file);
 
     match file {
-        Ok(file) => Interpreter::new().interpret(&parse(lex(&file))),
+        Ok(file) => Interpreter::new().interpret(&Parser::new(lex(&file)).parse()),
         Err(err) => eprintln!("Error while reading file: {}", err),
     }
 }
@@ -29,15 +28,21 @@ impl Interpreter {
         }
     }
 
-    fn interpret(&mut self, instructions: &Vec<Instruction>) {
+    fn interpret(&mut self, instructions: &[Instruction]) {
         for instruction in instructions.iter() {
             match instruction {
-                Instruction::Left => self.pointer += 1,
+                Instruction::Left => self.pointer -= 1,
                 Instruction::Loop(loop_instructions) => self.interpret(loop_instructions),
-                Instruction::Add => self.cells[self.pointer] += 1,
-                Instruction::Subtract => self.cells[self.pointer] -= 1,
+                Instruction::Add => {
+                    self.cells[self.pointer] = self.cells[self.pointer].wrapping_add(1)
+                }
+                Instruction::Subtract => {
+                    self.cells[self.pointer] = self.cells[self.pointer].wrapping_sub(1)
+                }
                 Instruction::Right => self.pointer += 1,
-                Instruction::Output => print!("{}", self.cells[self.pointer] as char),
+                Instruction::Output => {
+                    print!("{}", (self.cells[self.pointer] as char));
+                }
                 Instruction::Input => self.cells[self.pointer] = read_input(),
             }
         }
