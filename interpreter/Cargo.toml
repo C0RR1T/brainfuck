@@ -8,3 +8,9 @@ edition = "2021"
 [dependencies]
 lexer = { path = "../lexer" }
 parser = { path = "../parser" }
+
+[lib]
+name = "interpreter"
+path = "./src/lib.rs"
+
+
