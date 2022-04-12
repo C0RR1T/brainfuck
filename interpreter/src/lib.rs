@@ -16,44 +16,42 @@ impl Interpreter {
         }
     }
 
-    pub fn interpret(&mut self, instructions: &[Instruction]) -> String {
-        let mut output = String::new();
+    pub fn interpret(&mut self, instructions: &[Instruction]) {
         for instruction in instructions.iter() {
             match instruction {
                 Instruction::Left(amount) => self.pointer -= *amount as usize,
-                Instruction::Loop(loop_instructions) => {
-                    output.push_str(&self.interpret_loop(loop_instructions))
-                }
+                Instruction::Loop(loop_instructions) => self.interpret_loop(loop_instructions),
                 Instruction::Add(amount) => {
                     self.cells[self.pointer] = self.cells[self.pointer].wrapping_add(*amount)
                 }
+
                 Instruction::Subtract(amount) => {
                     self.cells[self.pointer] = self.cells[self.pointer].wrapping_sub(*amount)
                 }
+
                 Instruction::Right(amount) => self.pointer += *amount as usize,
                 Instruction::Output => {
-                    output.push(self.cells[self.pointer] as char);
+                    print!("{}", self.cells[self.pointer] as char);
                 }
                 Instruction::Input => self.cells[self.pointer] = read_input(),
                 Instruction::Clear => self.cells[self.pointer] = 0,
+                Instruction::InfiniteLoop(loop_instructions) => {
+                    // Infinite loop
+                    if self.cells[self.pointer] > 0 {
+                        self.interpret_loop(loop_instructions)
+                    }
+                }
             }
         }
-        output
     }
 
-    fn interpret_loop(&mut self, instructions: &[Instruction]) -> String {
-        let mut output = String::new();
+    fn interpret_loop(&mut self, instructions: &[Instruction]) {
         while self.cells[self.pointer] != 0 {
-            output.push_str(&self.interpret(instructions))
+            self.interpret(instructions)
         }
-        output
     }
 
     pub fn interpret_file(&mut self, file: String) {
-        println!("{}", self.interpret_file_quiet(file))
-    }
-
-    pub fn interpret_file_quiet(&mut self, file: String) -> String {
         let file = fs::read_to_string(file);
 
         match file {

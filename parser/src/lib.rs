@@ -16,6 +16,8 @@ pub enum Instruction {
     Clear,
     Output,
     Input,
+    //Possible Infinite loop depending on the state
+    InfiniteLoop(Vec<Instruction>),
 }
 
 pub struct Parser {
@@ -53,23 +55,28 @@ impl Parser {
     }
 
     fn combine_token(&mut self, token_to_match: Token) -> u8 {
-        let mut amount = 1;
-        while let Some(token) = self.peek_nth((amount - 1) as usize) {
-            if token == token_to_match && amount < u8::MAX {
-                amount += 1;
-            } else {
-                break;
+        if let Some(token) = self.peek() {
+            if token == token_to_match {
+                let mut amount = 1;
+                while let Some(token) = self.peek_nth((amount - 1) as usize) {
+                    if token == token_to_match && amount < u8::MAX {
+                        amount += 1;
+                    } else {
+                        break;
+                    }
+                }
+                self.consume_elements((amount - 1) as usize);
+                return amount;
             }
         }
-        if amount > 1 {
-            self.consume_elements((amount - 1) as usize);
-        }
-        amount
+        1
     }
 
     fn parse_loop(&mut self) -> Instruction {
         let mut loop_instructions = Vec::new();
         let mut is_clearing_cell = true;
+        let mut plus: usize = 0;
+        let mut minus: usize = 0;
         while let Some(token) = self.next() {
             if token == Token::CloseLoop {
                 break;
@@ -77,9 +84,9 @@ impl Parser {
                 let new_token = self.parse_token(&token);
                 if is_clearing_cell {
                     match new_token {
-                        Instruction::Add(_) | Instruction::Subtract(_) | Instruction::Clear => {
-                            is_clearing_cell = true
-                        }
+                        Instruction::Add(amount) => plus += amount as usize,
+                        Instruction::Subtract(amount) => minus += amount as usize,
+                        Instruction::Clear => continue,
                         _ => is_clearing_cell = false,
                     }
                 }
@@ -87,7 +94,11 @@ impl Parser {
             }
         }
         if is_clearing_cell {
-            return Instruction::Clear;
+            return if plus != minus {
+                Instruction::Clear
+            } else {
+                Instruction::InfiniteLoop(loop_instructions)
+            };
         }
         Instruction::Loop(loop_instructions)
     }
