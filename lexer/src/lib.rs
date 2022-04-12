@@ -18,7 +18,7 @@ pub fn lex(input: &str) -> Vec<Token> {
         .collect()
 }
 
-#[derive(Eq, PartialEq, Debug, Clone)]
+#[derive(Eq, PartialEq, Debug, Clone, Copy)]
 pub enum Token {
     Left,
     Right,

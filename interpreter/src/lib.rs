@@ -20,17 +20,17 @@ impl Interpreter {
         let mut output = String::new();
         for instruction in instructions.iter() {
             match instruction {
-                Instruction::Left => self.pointer -= 1,
+                Instruction::Left(amount) => self.pointer -= *amount as usize,
                 Instruction::Loop(loop_instructions) => {
                     output.push_str(&self.interpret_loop(loop_instructions))
                 }
-                Instruction::Add => {
-                    self.cells[self.pointer] = self.cells[self.pointer].wrapping_add(1)
+                Instruction::Add(amount) => {
+                    self.cells[self.pointer] = self.cells[self.pointer].wrapping_add(*amount)
                 }
-                Instruction::Subtract => {
-                    self.cells[self.pointer] = self.cells[self.pointer].wrapping_sub(1)
+                Instruction::Subtract(amount) => {
+                    self.cells[self.pointer] = self.cells[self.pointer].wrapping_sub(*amount)
                 }
-                Instruction::Right => self.pointer += 1,
+                Instruction::Right(amount) => self.pointer += *amount as usize,
                 Instruction::Output => {
                     output.push(self.cells[self.pointer] as char);
                 }
@@ -49,11 +49,18 @@ impl Interpreter {
     }
 
     pub fn interpret_file(&mut self, file: String) {
+        println!("{}", self.interpret_file_quiet(file))
+    }
+
+    pub fn interpret_file_quiet(&mut self, file: String) -> String {
         let file = fs::read_to_string(file);
 
         match file {
-            Ok(file) => println!("{}", self.interpret(&Parser::new(lex(&file)).parse())),
-            Err(err) => eprintln!("Error while reading file: {}", err),
+            Ok(file) => self.interpret(&Parser::new(lex(&file)).parse()),
+            Err(err) => {
+                eprintln!("Error while reading file: {}", err);
+                std::process::exit(1)
+            }
         }
     }
 }
