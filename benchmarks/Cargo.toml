@@ -1,8 +1,16 @@
 [package]
 name = "benchmarks"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
 
 [dependencies]
 interpreter = {path = "../interpreter"}
+parser = {path = "../parser"}
+
+[dev-dependencies]
+criterion = "0.3"
+
+[[bench]]
+name = "interpreter_benchmark"
+harness = false
