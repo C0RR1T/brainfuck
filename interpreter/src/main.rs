@@ -1,8 +1,6 @@
-use std::{env, fs};
+use std::env;
 
 use interpreter::Interpreter;
-use lexer::lex;
-use parser::Parser;
 
 fn main() {
     let file = env::args().nth(1).expect("Please provide an input file.");

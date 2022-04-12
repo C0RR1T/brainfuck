@@ -1,4 +1,4 @@
-use std::{env, fs};
+use std::fs;
 
 use lexer::lex;
 use parser::{Instruction, Parser};
