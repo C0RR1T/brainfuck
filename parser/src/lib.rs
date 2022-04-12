@@ -13,6 +13,7 @@ pub enum Instruction {
     Subtract(u8),
     Left(u8),
     Right(u8),
+    Clear,
     Output,
     Input,
 }
@@ -68,12 +69,25 @@ impl Parser {
 
     fn parse_loop(&mut self) -> Instruction {
         let mut loop_instructions = Vec::new();
+        let mut is_clearing_cell = true;
         while let Some(token) = self.next() {
             if token == Token::CloseLoop {
                 break;
             } else {
-                loop_instructions.push(self.parse_token(&token));
+                let new_token = self.parse_token(&token);
+                if is_clearing_cell {
+                    match new_token {
+                        Instruction::Add(_) | Instruction::Subtract(_) | Instruction::Clear => {
+                            is_clearing_cell = true
+                        }
+                        _ => is_clearing_cell = false,
+                    }
+                }
+                loop_instructions.push(new_token);
             }
+        }
+        if is_clearing_cell {
+            return Instruction::Clear;
         }
         Instruction::Loop(loop_instructions)
     }

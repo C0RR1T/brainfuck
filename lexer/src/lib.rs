@@ -3,16 +3,17 @@ use std::fmt::Formatter;
 
 pub fn lex(input: &str) -> Vec<Token> {
     input
-        .split("")
+        .chars()
+        .into_iter()
         .filter_map(|t| match t {
-            "<" => Some(Token::Left),
-            ">" => Some(Token::Right),
-            "." => Some(Token::Output),
-            "," => Some(Token::Input),
-            "[" => Some(Token::OpenLoop),
-            "]" => Some(Token::CloseLoop),
-            "+" => Some(Token::Add),
-            "-" => Some(Token::Subtract),
+            '<' => Some(Token::Left),
+            '>' => Some(Token::Right),
+            '.' => Some(Token::Output),
+            ',' => Some(Token::Input),
+            '[' => Some(Token::OpenLoop),
+            ']' => Some(Token::CloseLoop),
+            '+' => Some(Token::Add),
+            '-' => Some(Token::Subtract),
             _ => None,
         })
         .collect()

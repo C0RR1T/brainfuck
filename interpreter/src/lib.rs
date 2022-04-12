@@ -35,6 +35,7 @@ impl Interpreter {
                     output.push(self.cells[self.pointer] as char);
                 }
                 Instruction::Input => self.cells[self.pointer] = read_input(),
+                Instruction::Clear => self.cells[self.pointer] = 0,
             }
         }
         output
