@@ -2,8 +2,6 @@ extern crate core;
 
 use std::vec::IntoIter;
 
-use peekmore::{PeekMore, PeekMoreIterator};
-
 use lexer::Token;
 
 #[derive(Eq, PartialEq, Debug, Clone)]
@@ -17,18 +15,19 @@ pub enum Instruction {
     Output,
     Input,
     //Possible Infinite loop depending on the state
-    InfiniteLoop(Vec<Instruction>),
+    InfiniteLoop,
+    Skip,
 }
 
 pub struct Parser {
-    tokens: PeekMoreIterator<IntoIter<Token>>,
+    tokens: IntoIter<Token>,
     instructions: Vec<Instruction>,
 }
 
 impl Parser {
     pub fn new(tokens: Vec<Token>) -> Self {
         Parser {
-            tokens: tokens.into_iter().peekmore(),
+            tokens: tokens.into_iter(),
             instructions: Vec::new(),
         }
     }
@@ -45,80 +44,29 @@ impl Parser {
         match token {
             Token::OpenLoop => self.parse_loop(),
             Token::CloseLoop => panic!("Unexpected Closing Bracket."),
-            Token::Add => Instruction::Add(self.combine_token(Token::Add)),
-            Token::Subtract => Instruction::Subtract(self.combine_token(Token::Subtract)),
-            Token::Left => Instruction::Left(self.combine_token(Token::Left)),
-            Token::Right => Instruction::Right(self.combine_token(Token::Right)),
+            Token::Add => Instruction::Add(1),
+            Token::Subtract => Instruction::Subtract(1),
+            Token::Left => Instruction::Left(1),
+            Token::Right => Instruction::Right(1),
             Token::Output => Instruction::Output,
             Token::Input => Instruction::Input,
         }
     }
 
-    fn combine_token(&mut self, token_to_match: Token) -> u8 {
-        if let Some(token) = self.peek() {
-            if token == token_to_match {
-                let mut amount = 1;
-                while let Some(token) = self.peek_nth((amount - 1) as usize) {
-                    if token == token_to_match && amount < u8::MAX {
-                        amount += 1;
-                    } else {
-                        break;
-                    }
-                }
-                self.consume_elements((amount - 1) as usize);
-                return amount;
-            }
-        }
-        1
-    }
-
     fn parse_loop(&mut self) -> Instruction {
         let mut loop_instructions = Vec::new();
-        let mut is_clearing_cell = true;
-        let mut plus: usize = 0;
-        let mut minus: usize = 0;
         while let Some(token) = self.next() {
             if token == Token::CloseLoop {
                 break;
             } else {
-                let new_token = self.parse_token(&token);
-                if is_clearing_cell {
-                    match new_token {
-                        Instruction::Add(amount) => plus += amount as usize,
-                        Instruction::Subtract(amount) => minus += amount as usize,
-                        Instruction::Clear => continue,
-                        _ => is_clearing_cell = false,
-                    }
-                }
-                loop_instructions.push(new_token);
+                loop_instructions.push(self.parse_token(&token));
             }
-        }
-        if is_clearing_cell {
-            return if plus != minus {
-                Instruction::Clear
-            } else {
-                Instruction::InfiniteLoop(loop_instructions)
-            };
         }
         Instruction::Loop(loop_instructions)
     }
 
     fn next(&mut self) -> Option<Token> {
         self.tokens.next()
-    }
-
-    fn consume_elements(&mut self, amount: usize) {
-        for _ in 0..amount {
-            self.tokens.next();
-        }
-    }
-
-    fn peek(&mut self) -> Option<Token> {
-        self.tokens.peek().copied()
-    }
-
-    fn peek_nth(&mut self, amount: usize) -> Option<Token> {
-        self.tokens.peek_nth(amount).copied()
     }
 }
 
