@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "error-messages",
     "interpreter",
     "lexer",
     "parser",
