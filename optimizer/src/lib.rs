@@ -60,6 +60,19 @@ impl Optimizer {
                         }
                     }
                 }
+                Instruction::Subtract(minus) => {
+                    if let Some(Instruction::Add(plus)) = iter.peek() {
+                        if plus <= minus {
+                            iter.next();
+                        } else {
+                            continue;
+                        }
+                    }
+                }
+                Instruction::Left(amount_left) => {}
+                Instruction::Right(amount_right) => {}
+                Clear => {}
+                _ => {}
             }
         }
 
