@@ -21,17 +21,69 @@ impl Optimizer {
         let mut instructions = Vec::new();
 
         while let Some(ins) = self.next() {
-            match ins {
-                Loop(loop_instructions) => {}
-                Instruction::Add(_) => {}
-                Instruction::Subtract(_) => {}
-                Instruction::Left(_) => {}
-                Instruction::Right(_) => {}
-                _ => {}
+            if let Some(new_instruction) = self.optimize_instruction(ins) {
+                instructions.push(new_instruction)
             }
         }
 
         instructions
+    }
+
+    fn optimize_instruction(&mut self, ins: Instruction) -> Option<Instruction> {
+        match ins {
+            Loop(loop_instructions) => None,
+            Instruction::Add(_) => Some(Instruction::Add(self.combine_tokens(Instruction::Add(1)))),
+            Instruction::Subtract(_) => Some(Instruction::Add(
+                self.combine_tokens(Instruction::Subtract(1)),
+            )),
+            Instruction::Left(_) => {
+                Some(Instruction::Add(self.combine_tokens(Instruction::Left(1))))
+            }
+            Instruction::Right(_) => {
+                Some(Instruction::Add(self.combine_tokens(Instruction::Right(1))))
+            }
+            _ => None,
+        }
+    }
+
+    fn summarize_tokens(instructions: Vec<Instruction>) -> Vec<Instruction> {
+        let mut iter = instructions.iter().peekable();
+
+        while let Some(ins) = iter.next() {
+            match ins {
+                Instruction::Add(plus) => {
+                    if let Some(Instruction::Subtract(minus)) = iter.peek() {
+                        if plus > minus {
+                            iter.next();
+                        } else {
+                            continue;
+                        }
+                    }
+                }
+            }
+        }
+
+        iter.cloned().collect::<Vec<_>>()
+    }
+
+    fn combine_tokens(&mut self, instruction_to_cmp: Instruction) -> u8 {
+        let mut amount: u8 = 1;
+
+        while let Some(instruction) = self.peek() {
+            if instruction_to_cmp == *instruction {
+                amount += 1;
+            }
+
+            if amount == u8::MAX {
+                break;
+            }
+        }
+
+        if amount > 1 {
+            self.consume_items((amount - 1) as usize);
+        }
+
+        amount
     }
 
     fn consume_iter_elements(&self, iter: &mut PeekMoreIterator<Iter<Instruction>>, amount: usize) {
@@ -39,85 +91,6 @@ impl Optimizer {
             iter.next();
         }
     }
-
-    fn optimize_loops(&mut self, loop_instructions: Vec<Instruction>) -> Instruction {
-        let mut iter = loop_instructions.iter().peekmore();
-        let mut new_instructions = Vec::new();
-        let mut is_pure = true;
-        let mut amount_plus = 0;
-        let mut amount_minus = 0;
-        while let Some(i) = iter.next() {
-            match i {
-                Instruction::Add(_) => {
-                    let amount =
-                        self.combine_instructions_vec(&loop_instructions, Instruction::Add(1));
-                    amount_plus += amount;
-                    self.consume_iter_elements(&mut iter, amount as usize);
-                    new_instructions.push(Instruction::Add(amount))
-                }
-                Instruction::Subtract(_) => {
-                    let amount =
-                        self.combine_instructions_vec(&loop_instructions, Instruction::Add(1));
-                    amount_minus += amount;
-                    new_instructions.push(Instruction::Subtract(amount))
-                }
-                Instruction::Left(_) => {
-                    let amount =
-                        self.combine_instructions_vec(&loop_instructions, Instruction::Left(1));
-                }
-                Instruction::Right(_) => {}
-                Clear => {}
-                other => {
-                    is_pure = false;
-                    new_instructions.push(other.clone());
-                }
-            }
-        }
-        if is_pure {
-            return Clear;
-        }
-        Loop(new_instructions)
-    }
-
-    fn combine_instructions_vec(
-        &self,
-        instructions: &Vec<Instruction>,
-        ins_to_match: Instruction,
-    ) -> u8 {
-        let mut iter = instructions.iter().peekmore();
-        if let Some(i) = iter.peek() {
-            if **i == ins_to_match {
-                let mut amount = 2u8;
-                while let Some(i) = iter.peek_nth(amount as usize) {
-                    if **i == ins_to_match && amount < u8::MAX {
-                        amount += 1
-                    } else {
-                        break;
-                    }
-                }
-                return amount;
-            }
-        }
-        1
-    }
-
-    fn combine_instructions(&mut self, ins_to_match: Instruction, iter: impl Iterator) -> usize {
-        if let Some(i) = self.peek() {
-            if *i == ins_to_match {
-                let mut amount = 2;
-                while let Some(i) = self.peek_nth(amount) {
-                    if *i == ins_to_match {
-                        amount += 1
-                    } else {
-                        break;
-                    }
-                }
-                return amount;
-            }
-        }
-        1
-    }
-
     fn peek(&mut self) -> Option<&Instruction> {
         self.instructions.peek()
     }
