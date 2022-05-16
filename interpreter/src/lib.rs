@@ -1,4 +1,5 @@
 use std::fs;
+use std::io::Read;
 
 use lexer::lex;
 use parser::{Instruction, Parser};
@@ -57,7 +58,14 @@ impl Interpreter {
         let file = fs::read_to_string(file);
 
         match file {
-            Ok(file) => self.interpret(&Parser::new(lex(&file)).parse()),
+            Ok(file) => {
+                let instructions = Parser::new(lex(&file)).parse();
+
+                match instructions {
+                    Ok(instructions) => self.interpret(&instructions),
+                    Err(err) => {}
+                }
+            }
             Err(err) => {
                 eprintln!("Error while reading file: {}", err);
                 std::process::exit(1)
@@ -66,12 +74,14 @@ impl Interpreter {
     }
 }
 
+fn print_error()
+
 fn read_input() -> u8 {
-    let mut input = String::new();
+    let mut buf = [0;1];
     std::io::stdin()
-        .read_line(&mut input)
-        .expect("Failed to read line");
-    *input.as_bytes().get(0).unwrap_or(&0)
+        .read_exact(&mut buf)
+        .unwrap();
+    buf[0]
 }
 
 #[test]
