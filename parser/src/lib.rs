@@ -61,21 +61,19 @@ impl Parser {
             LexerToken {
                 token: TokenType::Add,
                 ..
-            } => Ok(Instruction::Add(self.combine_token(TokenType::Add))),
+            } => Ok(Instruction::Add(1)),
             LexerToken {
                 token: TokenType::Subtract,
                 ..
-            } => Ok(Instruction::Subtract(
-                self.combine_token(TokenType::Subtract),
-            )),
+            } => Ok(Instruction::Subtract(1)),
             LexerToken {
                 token: TokenType::Left,
                 ..
-            } => Ok(Instruction::Left(self.combine_token(TokenType::Left))),
+            } => Ok(Instruction::Left(1)),
             LexerToken {
                 token: TokenType::Right,
                 ..
-            } => Ok(Instruction::Right(self.combine_token(TokenType::Right))),
+            } => Ok(Instruction::Right(1)),
             LexerToken {
                 token: TokenType::Output,
                 ..
@@ -87,24 +85,8 @@ impl Parser {
         }
     }
 
-    fn combine_token(&mut self, token_to_match: TokenType) -> u8 {
-        let mut amount = 1;
-        while let Some(token) = self.peek_nth((amount - 1) as usize) {
-            if token.token == token_to_match && amount < u8::MAX {
-                amount += 1;
-            } else {
-                break;
-            }
-        }
-        if amount > 1 {
-            self.consume_elements((amount - 1) as usize);
-        }
-        amount
-    }
-
     fn parse_loop(&mut self, first_token: &LexerToken) -> ParserResult<Instruction> {
         let mut loop_instructions = Vec::new();
-        let mut is_clearing_cell = true;
         while let Some(token) = self.next() {
             match token {
                 LexerToken {
@@ -114,20 +96,9 @@ impl Parser {
 
                 token => {
                     let new_token = self.parse_token(&token)?;
-                    if is_clearing_cell {
-                        match new_token {
-                            Instruction::Add(_) | Instruction::Subtract(_) | Instruction::Clear => {
-                                is_clearing_cell = true
-                            }
-                            _ => is_clearing_cell = false,
-                        }
-                    }
                     loop_instructions.push(new_token);
                 }
             }
-        }
-        if is_clearing_cell {
-            return Ok(Instruction::Clear);
         }
 
         Err(UnexpectedEOF(Span::from(

@@ -1,11 +1,10 @@
-use std::mem::transmute;
 use std::slice::Iter;
 use std::vec::IntoIter;
 
 use peekmore::{PeekMore, PeekMoreIterator};
 
 use parser::Instruction;
-use parser::Instruction::{Clear, InfiniteLoop, Loop};
+use parser::Instruction::{Clear, Loop};
 
 struct Optimizer {
     instructions: PeekMoreIterator<IntoIter<Instruction>>,
@@ -23,7 +22,7 @@ impl Optimizer {
 
         while let Some(ins) = self.next() {
             match ins {
-                Instruction::Loop(loop_instructions) => {}
+                Loop(loop_instructions) => {}
                 Instruction::Add(_) => {}
                 Instruction::Subtract(_) => {}
                 Instruction::Left(_) => {}
@@ -67,9 +66,7 @@ impl Optimizer {
                         self.combine_instructions_vec(&loop_instructions, Instruction::Left(1));
                 }
                 Instruction::Right(_) => {}
-                Instruction::Clear => {}
-                Instruction::InfiniteLoop => return InfiniteLoop,
-                Instruction::Skip => {}
+                Clear => {}
                 other => {
                     is_pure = false;
                     new_instructions.push(other.clone());
@@ -77,11 +74,7 @@ impl Optimizer {
             }
         }
         if is_pure {
-            return if amount_minus == amount_plus {
-                InfiniteLoop
-            } else {
-                Clear
-            };
+            return Clear;
         }
         Loop(new_instructions)
     }
@@ -135,7 +128,7 @@ impl Optimizer {
 
     fn consume_items(&mut self, amount: usize) {
         for _ in 0..amount {
-            self.next()
+            self.next();
         }
     }
 

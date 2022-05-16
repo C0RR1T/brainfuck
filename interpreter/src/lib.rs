@@ -37,15 +37,8 @@ impl Interpreter {
                 }
                 Instruction::Input => self.cells[self.pointer] = read_input(),
                 Instruction::Clear => self.cells[self.pointer] = 0,
-                Instruction::InfiniteLoop(loop_instructions) => {
-                    // Infinite loop
-                    if self.cells[self.pointer] > 0 {
-                        self.interpret_loop(loop_instructions)
-                    }
-                }
             }
         }
-        output
     }
 
     fn interpret_loop(&mut self, instructions: &[Instruction]) {
