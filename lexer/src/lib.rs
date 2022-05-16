@@ -16,7 +16,7 @@ pub fn lex(input: &str) -> Vec<LexerToken> {
             '-' => Some((i, TokenType::Subtract)),
             _ => None,
         })
-        .map(|(i, t)| LexerToken::new(Span::from(i, i), t))
+        .map(|(i, t)| LexerToken::new(Span::from(i, i + 1), t))
         .collect()
 }
 

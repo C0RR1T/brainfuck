@@ -108,8 +108,8 @@ impl Parser {
         while let Some(token) = self.next() {
             match token {
                 LexerToken {
-                    span: i,
                     token: TokenType::CloseLoop,
+                    ..
                 } => return Ok(Instruction::Loop(loop_instructions)),
 
                 token => {
@@ -132,7 +132,7 @@ impl Parser {
 
         Err(UnexpectedEOF(Span::from(
             first_token.span.from,
-            first_token.span.from + loop_instructions.len(),
+            first_token.span.to,
         )))
     }
 
