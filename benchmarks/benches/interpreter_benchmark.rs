@@ -13,13 +13,13 @@ fn interpreter(c: &mut Criterion) {
     c.bench_function("interpret file fizzbuzz", |b| {
         b.iter(|| {
             interpreter::Interpreter::new()
-                .interpret_file_quiet("../brainfuck-example/fizzbuzz.txt".to_string());
+                .interpret_file_quiet("../brainfuck-example/fizzbuzz.bf");
         })
     });
     c.bench_function("interpret file hello-world", |b| {
         b.iter(|| {
             interpreter::Interpreter::new()
-                .interpret_file_quiet("../brainfuck-example/hello-world.txt".to_string());
+                .interpret_file_quiet("../brainfuck-example/hello-world.bf");
         })
     });
 }
