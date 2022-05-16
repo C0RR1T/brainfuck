@@ -214,6 +214,7 @@ name = "interpreter"
 version = "0.2.0"
 dependencies = [
  "lexer",
+ "owo-colors",
  "parser",
 ]
 
