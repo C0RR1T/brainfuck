@@ -191,7 +191,9 @@ checksum = "e78d4f1cc4ae33bbfc157ed5d5a5ef3bc29227303d595861deb238fcec4e9457"
 name = "error-messages"
 version = "0.1.0"
 dependencies = [
+ "lexer",
  "owo-colors",
+ "parser",
 ]
 
 [[package]]
@@ -213,6 +215,7 @@ dependencies = [
 name = "interpreter"
 version = "0.2.0"
 dependencies = [
+ "error-messages",
  "lexer",
  "owo-colors",
  "parser",
