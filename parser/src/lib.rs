@@ -4,8 +4,9 @@ use std::vec::IntoIter;
 
 use peekmore::{PeekMore, PeekMoreIterator};
 
-use crate::ParserError::UnexpectedEOF;
 use lexer::{LexerToken, Span, TokenType};
+
+use crate::ParserError::UnexpectedEOF;
 
 pub type ParserResult<T> = Result<T, ParserError>;
 
@@ -25,6 +26,22 @@ pub enum Instruction {
     Clear,
     Output,
     Input,
+    // MC: Multiplicant / MP: Multiplier
+    Multiply { mc: u8, mp: u8, offset: u8 },
+    // DV: Dividend / DV: Divider
+    Divide { dv: u8, ds: u8, offset: u8 },
+}
+
+impl Instruction {
+    pub fn to_number(&self) -> isize {
+        match self {
+            Instruction::Add(plus) => *plus as isize,
+            Instruction::Subtract(minus) => -(*minus as isize),
+            Instruction::Left(left) => -(*left as isize),
+            Instruction::Right(right) => *right as isize,
+            _ => 0,
+        }
+    }
 }
 
 pub struct Parser {
