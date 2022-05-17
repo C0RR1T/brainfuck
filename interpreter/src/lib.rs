@@ -22,7 +22,9 @@ impl Interpreter {
     pub fn interpret(&mut self, instructions: &[Instruction]) {
         for instruction in instructions.iter() {
             match instruction {
-                Instruction::Left(amount) => self.pointer -= *amount as usize,
+                Instruction::Left(amount) => {
+                    self.pointer = self.pointer.wrapping_sub(*amount as usize)
+                }
                 Instruction::Loop(loop_instructions) => self.interpret_loop(loop_instructions),
                 Instruction::Add(amount) => {
                     self.cells[self.pointer] = self.cells[self.pointer].wrapping_add(*amount)
@@ -32,12 +34,27 @@ impl Interpreter {
                     self.cells[self.pointer] = self.cells[self.pointer].wrapping_sub(*amount)
                 }
 
-                Instruction::Right(amount) => self.pointer += *amount as usize,
+                Instruction::Right(amount) => {
+                    self.pointer = self.pointer.wrapping_add(*amount as usize)
+                }
                 Instruction::Output => {
-                    print!("{}", self.cells[self.pointer] as char);
+                    print!("{}", (self.cells[self.pointer] as char));
                 }
                 Instruction::Input => self.cells[self.pointer] = read_input(),
                 Instruction::Clear => self.cells[self.pointer] = 0,
+                Instruction::Multiply { offset, mc, mp } => {
+                    let result = mc.wrapping_mul(*mp);
+                    if *offset >= 0 {
+                        self.cells[self.pointer.wrapping_add(*offset as usize)] = self.cells
+                            [self.pointer.wrapping_add(offset.abs() as usize)]
+                        .wrapping_add(result);
+                    } else {
+                        self.cells[self.pointer.wrapping_sub(*offset as usize)] = self.cells
+                            [self.pointer.wrapping_sub(offset.abs() as usize)]
+                        .wrapping_add(result)
+                    }
+                }
+                Instruction::Divide { .. } => {}
             }
         }
     }

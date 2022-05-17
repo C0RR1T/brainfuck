@@ -26,10 +26,10 @@ pub enum Instruction {
     Clear,
     Output,
     Input,
-    // MC: Multiplicant / MP: Multiplier
-    Multiply { mc: u8, mp: u8, offset: u8 },
-    // DV: Dividend / DV: Divider
-    Divide { dv: u8, ds: u8, offset: u8 },
+    // MC: Multiplicant (In the loop) / MP: Multiplier (current cell)
+    Multiply { mc: u8, mp: u8, offset: isize },
+    // DV: Dividend (In the loop) / DV: Divider (current cell)
+    Divide { dv: u8, ds: u8, offset: isize },
 }
 
 impl Instruction {

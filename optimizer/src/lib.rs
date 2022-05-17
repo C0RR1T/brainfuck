@@ -27,6 +27,8 @@ impl Optimizer {
             }
         }
 
+        instructions = Self::summarize_tokens(&instructions);
+
         instructions
     }
 
@@ -37,6 +39,13 @@ impl Optimizer {
             Instruction::Subtract(_) => Some(Instruction::Add(
                 self.combine_tokens(Instruction::Subtract(1)),
             )),
+            Clear => {
+                if let Some(Loop(_)) = self.peek() {
+                    self.next();
+                    return Some(Clear);
+                }
+                Some(Clear)
+            }
             Instruction::Left(_) => {
                 Some(Instruction::Add(self.combine_tokens(Instruction::Left(1))))
             }
@@ -59,23 +68,10 @@ impl Optimizer {
                 {
                     return Some(Clear)
                 }
-                Loop(ins) => {
-                    if let Some(instruction) = Self::optimize_loops(ins) {
-                        match instruction {
-                            Clear if optimized.len() == 1 => return Some(Clear),
-                            token => new_instructions.push(token),
-                        }
-                    } else if optimized.len() == 1 {
-                        return None;
-                    }
-                }
-                Instruction::Left(_) => {}
-                Instruction::Right(_) => {}
+                Clear if optimized.len() == 1 => return Some(Clear),
+                Instruction::Left(amount) => {}
+                Instruction::Right(amount) => {}
                 Clear => {}
-                Instruction::Output => {}
-                Instruction::Input => {}
-                Instruction::Multiply { .. } => {}
-                Instruction::Divide { .. } => {}
                 instruction => new_instructions.push(instruction.clone()),
             }
 
