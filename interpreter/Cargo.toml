@@ -10,6 +10,7 @@ lexer = { path = "../lexer" }
 owo-colors = "3.4.0"
 parser = { path = "../parser" }
 error-messages = {path = "../error-messages"}
+clap = "3.1.18"
 
 [lib]
 name = "interpreter"
