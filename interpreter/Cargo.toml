@@ -9,6 +9,7 @@ edition = "2021"
 lexer = { path = "../lexer" }
 owo-colors = "3.4.0"
 parser = { path = "../parser" }
+error-messages = {path = "../error-messages"}
 
 [lib]
 name = "interpreter"

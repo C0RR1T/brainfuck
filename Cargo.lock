@@ -188,6 +188,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e78d4f1cc4ae33bbfc157ed5d5a5ef3bc29227303d595861deb238fcec4e9457"
 
 [[package]]
+name = "error-messages"
+version = "0.1.0"
+dependencies = [
+ "lexer",
+ "owo-colors",
+ "parser",
+]
+
+[[package]]
 name = "half"
 version = "1.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -206,6 +215,7 @@ dependencies = [
 name = "interpreter"
 version = "0.2.0"
 dependencies = [
+ "error-messages",
  "lexer",
  "owo-colors",
  "parser",
