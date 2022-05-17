@@ -5,7 +5,7 @@ use std::vec::IntoIter;
 use peekmore::{PeekMore, PeekMoreIterator};
 
 use parser::Instruction;
-use parser::Instruction::{Clear, Loop};
+use parser::Instruction::{Clear, Loop, Multiply};
 
 struct Optimizer {
     instructions: PeekMoreIterator<IntoIter<Instruction>>,
@@ -40,7 +40,9 @@ impl Optimizer {
                 self.combine_tokens(Instruction::Subtract(1)),
             )),
             Clear => {
-                if let Some(Loop(_)) = self.peek() {
+                if let Some(Loop(_) | Multiply { .. } | Instruction::Divide { .. } | Clear) =
+                    self.peek()
+                {
                     self.next();
                     return Some(Clear);
                 }
@@ -57,7 +59,7 @@ impl Optimizer {
     }
 
     fn optimize_loops(ins: &Vec<Instruction>) -> Option<Instruction> {
-        let mut optimized = Self::summarize_tokens(ins);
+        let optimized = Self::summarize_tokens(ins);
         let mut iter = optimized.iter().peekmore();
         let mut new_instructions: Vec<Instruction> = Vec::new();
 
@@ -69,8 +71,34 @@ impl Optimizer {
                     return Some(Clear)
                 }
                 Clear if optimized.len() == 1 => return Some(Clear),
-                Instruction::Left(amount) => {}
-                Instruction::Right(amount) => {}
+                Instruction::Left(amt_left) => {
+                    if let Some(Instruction::Add(plus)) = iter.peek() {
+                        if let Some(Instruction::Right(amt_right)) = iter.peek() {
+                            if amt_left == amt_right {
+                                if let Some(Instruction::Subtract(1)) = iter.peek() {
+                                    return Some(Multiply {
+                                        mc: *plus,
+                                        offset: -(*amt_left as isize),
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+                Instruction::Right(amt_right) => {
+                    if let Some(Instruction::Add(plus)) = iter.peek() {
+                        if let Some(Instruction::Left(amt_left)) = iter.peek() {
+                            if amt_left == amt_right {
+                                if let Some(Instruction::Subtract(1)) = iter.peek() {
+                                    return Some(Multiply {
+                                        mc: *plus,
+                                        offset: (*amt_right as isize),
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
                 Clear => {}
                 instruction => new_instructions.push(instruction.clone()),
             }

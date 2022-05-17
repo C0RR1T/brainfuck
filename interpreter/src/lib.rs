@@ -1,8 +1,9 @@
-use error_messages::print_error;
-use owo_colors::OwoColorize;
 use std::fs;
 use std::io::Read;
 
+use owo_colors::OwoColorize;
+
+use error_messages::print_error;
 use lexer::{lex, Span};
 use parser::{Instruction, Parser, ParserError};
 
@@ -42,8 +43,8 @@ impl Interpreter {
                 }
                 Instruction::Input => self.cells[self.pointer] = read_input(),
                 Instruction::Clear => self.cells[self.pointer] = 0,
-                Instruction::Multiply { offset, mc, mp } => {
-                    let result = mc.wrapping_mul(*mp);
+                Instruction::Multiply { offset, mc } => {
+                    let result = mc.wrapping_mul(self.cells[self.pointer]);
                     if *offset >= 0 {
                         self.cells[self.pointer.wrapping_add(*offset as usize)] = self.cells
                             [self.pointer.wrapping_add(offset.abs() as usize)]
