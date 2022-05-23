@@ -1,10 +1,8 @@
 use std::fs;
 use std::io::Read;
 
-
-
 use error_messages::print_error;
-use lexer::{lex};
+use lexer::lex;
 use parser::{Instruction, Parser};
 
 pub struct Interpreter {
@@ -115,10 +113,10 @@ fn read_input() -> u8 {
     buf[0]
 }
 
-/// #[test]
-/// fn hello_world() {
-///     assert_eq!(
-///         Interpreter::new().interpret_ins(&parser::hello_world()[..]),
-///         "Hello World!\n"
-///     );
-/// }
+// #[test]
+// fn hello_world() {
+//     assert_eq!(
+//         Interpreter::new().interpret_ins(&parser::hello_world()[..]),
+//         "Hello World!\n"
+//     );
+// }
