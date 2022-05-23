@@ -220,11 +220,6 @@ impl Optimizer {
         amount
     }
 
-    fn consume_iter_elements(&self, iter: &mut PeekMoreIterator<Iter<Instruction>>, amount: usize) {
-        for _ in 0..amount {
-            iter.next();
-        }
-    }
     fn peek(&mut self) -> Option<&Instruction> {
         self.instructions.peek()
     }
@@ -237,9 +232,5 @@ impl Optimizer {
         for _ in 0..amount {
             self.next();
         }
-    }
-
-    fn peek_nth(&mut self, amount: usize) -> Option<&Instruction> {
-        self.instructions.peek_nth(amount)
     }
 }

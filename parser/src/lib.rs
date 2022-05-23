@@ -127,20 +127,6 @@ impl Parser {
     fn next(&mut self) -> Option<LexerToken> {
         self.tokens.next()
     }
-
-    fn consume_elements(&mut self, amount: usize) {
-        for _ in 0..amount {
-            self.tokens.next();
-        }
-    }
-
-    fn peek(&mut self) -> Option<LexerToken> {
-        self.tokens.peek().copied()
-    }
-
-    fn peek_nth(&mut self, amount: usize) -> Option<LexerToken> {
-        self.tokens.peek_nth(amount).copied()
-    }
 }
 
 #[test]

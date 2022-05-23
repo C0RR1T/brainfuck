@@ -10,6 +10,12 @@ pub struct Interpreter {
     pointer: usize,
 }
 
+impl Default for Interpreter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Interpreter {
     pub fn new() -> Self {
         Interpreter {
@@ -106,7 +112,6 @@ impl Interpreter {
         }
     }
 }
-
 fn read_input() -> u8 {
     let mut buf = [0; 1];
     std::io::stdin().read_exact(&mut buf).unwrap();
