@@ -1,5 +1,4 @@
 use std::cmp::Ordering;
-use std::slice::Iter;
 use std::vec::IntoIter;
 
 use peekmore::{PeekMore, PeekMoreIterator};
