@@ -7,7 +7,7 @@ use peekmore::{PeekMore, PeekMoreIterator};
 use parser::Instruction;
 use parser::Instruction::{Clear, Loop, Multiply};
 
-struct Optimizer {
+pub struct Optimizer {
     instructions: PeekMoreIterator<IntoIter<Instruction>>,
 }
 
@@ -58,7 +58,7 @@ impl Optimizer {
         }
     }
 
-    fn optimize_loops(ins: &Vec<Instruction>) -> Option<Instruction> {
+    fn optimize_loops(ins: &[Instruction]) -> Option<Instruction> {
         let optimized = Self::summarize_tokens(ins);
         let mut iter = optimized.iter().peekmore();
         let mut new_instructions: Vec<Instruction> = Vec::new();
@@ -109,7 +109,7 @@ impl Optimizer {
         None
     }
 
-    fn summarize_tokens(instructions: &Vec<Instruction>) -> Vec<Instruction> {
+    fn summarize_tokens(instructions: &[Instruction]) -> Vec<Instruction> {
         let mut iter = instructions.iter().peekable();
 
         let mut new_instructions: Vec<Instruction> = Vec::new();

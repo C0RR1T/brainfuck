@@ -2,15 +2,17 @@
 name = "interpreter"
 version = "0.2.0"
 edition = "2021"
+description = "A simple brainfuck interpreter written in Rust"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 lexer = { path = "../lexer" }
+optimizer = { path = "../optimizer"}
 owo-colors = "3.4.0"
 parser = { path = "../parser" }
 error-messages = {path = "../error-messages"}
-clap = "3.1.18"
+clap = { version = "3.1.18", features = ["derive"]}
 
 [lib]
 name = "interpreter"

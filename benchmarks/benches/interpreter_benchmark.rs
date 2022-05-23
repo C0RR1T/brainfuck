@@ -7,7 +7,7 @@ use parser::hello_world;
 fn interpreter(c: &mut Criterion) {
     c.bench_function("interpret hello world", |b| {
         b.iter(|| {
-            interpreter::Interpreter::new().interpret(&hello_world());
+            interpreter::Interpreter::new().interpret_ins(&hello_world());
         })
     });
     c.bench_function("interpret file fizzbuzz", |b| {
