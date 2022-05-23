@@ -32,7 +32,6 @@ fn print_location(span: &Span, input: &str, note: &str) {
         " ".repeat(code_line.split_at(span.from).0.len() + 1),
         "^".repeat(span.to - span.from).bright_red(),
     );
-    " ".repeat(info_string.len() - 3);
     eprintln!(
         "{}{} {}: {}",
         " ".repeat(info_string.len() - 2),

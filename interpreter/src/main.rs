@@ -1,4 +1,3 @@
-
 use std::path::PathBuf;
 
 use clap::Parser;
@@ -18,6 +17,6 @@ fn main() {
 
     Interpreter::new().interpret_file(
         args.file.to_str().expect("Expected valid path"),
-        args.no_opt,
+        !args.no_opt,
     );
 }

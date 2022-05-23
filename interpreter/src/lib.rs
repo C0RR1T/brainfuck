@@ -1,9 +1,11 @@
-use std::fs;
-use std::io::Read;
+use std::io::{Read, Write};
+use std::{fs, io};
 
 use error_messages::print_error;
 use lexer::lex;
 use parser::{Instruction, Parser};
+
+const MEM_SIZE: isize = 32_000;
 
 pub struct Interpreter {
     cells: [u8; 32_000],
@@ -27,12 +29,8 @@ impl Interpreter {
     pub fn interpret_ins(&mut self, instructions: &[Instruction]) {
         for instruction in instructions.iter() {
             match instruction {
-                Instruction::Left(amount) => {
-                    self.pointer = self.pointer.wrapping_sub(*amount as usize)
-                }
-                Instruction::Right(amount) => {
-                    self.pointer = self.pointer.wrapping_add(*amount as usize)
-                }
+                Instruction::Left(amount) => self.offset_to_pointer(*amount as isize),
+                Instruction::Right(amount) => self.offset_to_pointer(*amount as isize),
                 Instruction::Loop(loop_instructions) => self.interpret_loop(loop_instructions),
                 Instruction::Add(amount) => {
                     self.cells[self.pointer] = self.cells[self.pointer].wrapping_add(*amount)
@@ -44,6 +42,7 @@ impl Interpreter {
 
                 Instruction::Output => {
                     print!("{}", (self.cells[self.pointer] as char));
+                    io::stdout().flush().unwrap();
                 }
                 Instruction::Input => self.cells[self.pointer] = read_input(),
                 Instruction::Clear => self.cells[self.pointer] = 0,
@@ -52,36 +51,46 @@ impl Interpreter {
                     self.offset_to_pointer(*offset);
                     self.cells[self.pointer] = self.cells[self.pointer]
                         .wrapping_mul(self.cells[old_pointer].wrapping_mul(*mc));
-                    self.cells[old_pointer] = 0;
+                    self.pointer = old_pointer;
+                    self.cells[self.pointer] = 0;
                 }
                 Instruction::Divide { offset, dv } => {
                     let old_pointer = self.pointer;
                     self.offset_to_pointer(*offset);
                     self.cells[self.pointer] =
                         self.cells[self.pointer].wrapping_div(self.cells[old_pointer] * dv);
-                    self.cells[old_pointer] = 0;
+                    self.pointer = old_pointer;
+                    self.cells[self.pointer] = 0;
                 }
             }
         }
     }
 
-    pub fn interpret(&mut self, instructions: Vec<Instruction>, opt: bool) {
-        if opt {
-            let instructions = optimizer::Optimizer::new(instructions).optimize();
-            self.interpret_ins(&instructions)
-        } else {
-            self.interpret_ins(&instructions)
+    pub fn interpret(&mut self, src: &str, opt: bool) {
+        let instructions = Parser::new(lex(src)).parse();
+
+        match instructions {
+            Ok(instructions) => {
+                if opt {
+                    let instructions = optimizer::Optimizer::new(instructions).optimize();
+                    self.interpret_ins(&instructions)
+                } else {
+                    self.interpret_ins(&instructions)
+                }
+            }
+            Err(err) => {
+                print_error(&err, src);
+                std::process::exit(1);
+            }
         }
     }
 
     fn offset_to_pointer(&mut self, offset: isize) {
-        self.pointer = {
-            if offset <= 0 {
-                self.pointer.wrapping_sub(offset.abs() as usize)
-            } else {
-                self.pointer.wrapping_add(offset as usize)
-            }
-        };
+        if self.pointer as isize + offset >= 0 {
+            self.pointer = (((self.pointer as isize) + offset) % MEM_SIZE) as usize;
+        } else {
+            self.pointer = (MEM_SIZE - offset) as usize;
+        }
     }
 
     fn interpret_loop(&mut self, instructions: &[Instruction]) {
@@ -94,17 +103,7 @@ impl Interpreter {
         let file = fs::read_to_string(file);
 
         match file {
-            Ok(file) => {
-                let instructions = Parser::new(lex(&file)).parse();
-
-                match instructions {
-                    Ok(instructions) => self.interpret(instructions, opt),
-                    Err(err) => {
-                        print_error(&err, &file);
-                        std::process::exit(1);
-                    }
-                }
-            }
+            Ok(file) => self.interpret(&file, opt),
             Err(err) => {
                 eprintln!("Error while reading file: {}", err);
                 std::process::exit(1)

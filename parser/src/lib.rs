@@ -1,8 +1,9 @@
 extern crate core;
 
+use std::fmt::{Debug, Display, Formatter};
 use std::vec::IntoIter;
 
-use peekmore::{PeekMore, PeekMoreIterator};
+
 
 use lexer::{LexerToken, Span, TokenType};
 
@@ -26,10 +27,66 @@ pub enum Instruction {
     Clear,
     Output,
     Input,
-    // MC: Multiplicant (In the loop) / MP: Multiplier (Multiplier / current cell)
+    // MC: Multiplicand (In the loop) / MP: Multiplier (Multiplier / current cell)
     Multiply { mc: u8, offset: isize },
     // DV: Dividend (In the loop)
     Divide { dv: u8, offset: isize },
+}
+
+impl Display for Instruction {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Instruction::Loop(instructions) => {
+                f.write_str("[")?;
+                for ins in instructions {
+                    f.write_str(&*format!("{}", ins))?;
+                }
+                f.write_str("]")?;
+            }
+            Instruction::Add(amount) => f.write_str(&"+".repeat(*amount as usize))?,
+            Instruction::Subtract(amount) => f.write_str(&"-".repeat(*amount as usize))?,
+            Instruction::Left(amount) => f.write_str(&"<".repeat(*amount as usize))?,
+            Instruction::Right(amount) => f.write_str(&">".repeat(*amount as usize))?,
+            Instruction::Clear => f.write_str("[-]")?,
+            Instruction::Input => f.write_str(",")?,
+            Instruction::Multiply { offset, mc } => {
+                if *offset >= 0 {
+                    f.write_str(&*format!(
+                        "[{}{}{}-]",
+                        ">".repeat(*offset as usize),
+                        "+".repeat(*mc as usize),
+                        "<".repeat(*offset as usize)
+                    ))?;
+                } else {
+                    f.write_str(&*format!(
+                        "[{}{}{}-]",
+                        "<".repeat(*offset as usize),
+                        "+".repeat(*mc as usize),
+                        ">".repeat(*offset as usize)
+                    ))?;
+                }
+            }
+            Instruction::Divide { offset, dv } => {
+                if *offset >= 0 {
+                    f.write_str(&*format!(
+                        "[{}{}{}-]",
+                        ">".repeat(*offset as usize),
+                        "-".repeat(*dv as usize),
+                        "<".repeat(*offset as usize)
+                    ))?;
+                } else {
+                    f.write_str(&*format!(
+                        "[{}{}{}-]",
+                        "<".repeat(*offset as usize),
+                        "-".repeat(*dv as usize),
+                        ">".repeat(*offset as usize)
+                    ))?;
+                }
+            }
+            Instruction::Output => f.write_str(".")?
+        }
+        Ok(())
+    }
 }
 
 impl Instruction {
@@ -45,14 +102,14 @@ impl Instruction {
 }
 
 pub struct Parser {
-    tokens: PeekMoreIterator<IntoIter<LexerToken>>,
+    tokens: IntoIter<LexerToken>,
     instructions: Vec<Instruction>,
 }
 
 impl Parser {
     pub fn new(tokens: Vec<LexerToken>) -> Self {
         Parser {
-            tokens: tokens.into_iter().peekmore(),
+            tokens: tokens.into_iter(),
             instructions: Vec::new(),
         }
     }
@@ -262,20 +319,38 @@ fn parser_test() {
 
 pub fn hello_world() -> Vec<Instruction> {
     vec![
-        Instruction::Add(8),
+        Instruction::Add(1),
+        Instruction::Add(1),
+        Instruction::Add(1),
+        Instruction::Add(1),
+        Instruction::Add(1),
+        Instruction::Add(1),
+        Instruction::Add(1),
+        Instruction::Add(1),
         Instruction::Loop(vec![
             Instruction::Right(1),
-            Instruction::Add(4),
+            Instruction::Add(1),
+            Instruction::Add(1),
+            Instruction::Add(1),
+            Instruction::Add(1),
             Instruction::Loop(vec![
                 Instruction::Right(1),
-                Instruction::Add(2),
-                Instruction::Right(1),
-                Instruction::Add(3),
-                Instruction::Right(1),
-                Instruction::Add(3),
+                Instruction::Add(1),
+                Instruction::Add(1),
                 Instruction::Right(1),
                 Instruction::Add(1),
-                Instruction::Left(4),
+                Instruction::Add(1),
+                Instruction::Add(1),
+                Instruction::Right(1),
+                Instruction::Add(1),
+                Instruction::Add(1),
+                Instruction::Add(1),
+                Instruction::Right(1),
+                Instruction::Add(1),
+                Instruction::Left(1),
+                Instruction::Left(1),
+                Instruction::Left(1),
+                Instruction::Left(1),
                 Instruction::Subtract(1),
             ]),
             Instruction::Right(1),
@@ -284,40 +359,69 @@ pub fn hello_world() -> Vec<Instruction> {
             Instruction::Add(1),
             Instruction::Right(1),
             Instruction::Subtract(1),
-            Instruction::Right(2),
+            Instruction::Right(1),
+            Instruction::Right(1),
             Instruction::Add(1),
             Instruction::Loop(vec![Instruction::Left(1)]),
             Instruction::Left(1),
             Instruction::Subtract(1),
         ]),
-        Instruction::Right(2),
+        Instruction::Right(1),
+        Instruction::Right(1),
         Instruction::Output,
         Instruction::Right(1),
-        Instruction::Subtract(3),
+        Instruction::Subtract(1),
+        Instruction::Subtract(1),
+        Instruction::Subtract(1),
         Instruction::Output,
-        Instruction::Add(7),
+        Instruction::Add(1),
+        Instruction::Add(1),
+        Instruction::Add(1),
+        Instruction::Add(1),
+        Instruction::Add(1),
+        Instruction::Add(1),
+        Instruction::Add(1),
         Instruction::Output,
         Instruction::Output,
-        Instruction::Add(3),
+        Instruction::Add(1),
+        Instruction::Add(1),
+        Instruction::Add(1),
         Instruction::Output,
-        Instruction::Right(2),
+        Instruction::Right(1),
+        Instruction::Right(1),
         Instruction::Output,
         Instruction::Left(1),
         Instruction::Subtract(1),
         Instruction::Output,
         Instruction::Left(1),
         Instruction::Output,
-        Instruction::Add(3),
+        Instruction::Add(1),
+        Instruction::Add(1),
+        Instruction::Add(1),
         Instruction::Output,
-        Instruction::Subtract(6),
+        Instruction::Subtract(1),
+        Instruction::Subtract(1),
+        Instruction::Subtract(1),
+        Instruction::Subtract(1),
+        Instruction::Subtract(1),
+        Instruction::Subtract(1),
         Instruction::Output,
-        Instruction::Subtract(8),
+        Instruction::Subtract(1),
+        Instruction::Subtract(1),
+        Instruction::Subtract(1),
+        Instruction::Subtract(1),
+        Instruction::Subtract(1),
+        Instruction::Subtract(1),
+        Instruction::Subtract(1),
+        Instruction::Subtract(1),
         Instruction::Output,
-        Instruction::Right(2),
+        Instruction::Right(1),
+        Instruction::Right(1),
         Instruction::Add(1),
         Instruction::Output,
         Instruction::Right(1),
-        Instruction::Add(2),
+        Instruction::Add(1),
+        Instruction::Add(1),
         Instruction::Output,
     ]
 }
