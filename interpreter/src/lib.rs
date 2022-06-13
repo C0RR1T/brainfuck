@@ -23,22 +23,21 @@ impl Interpreter {
         let mut output = String::new();
         for instruction in instructions.iter() {
             match instruction {
-                Instruction::Left(amount) => self.pointer -= *amount as usize,
+                Instruction::Left => self.pointer -= 1,
                 Instruction::Loop(loop_instructions) => {
                     output.push_str(&self.interpret_loop(loop_instructions))
                 }
-                Instruction::Add(amount) => {
-                    self.cells[self.pointer] = self.cells[self.pointer].wrapping_add(*amount)
+                Instruction::Add => {
+                    self.cells[self.pointer] = self.cells[self.pointer].wrapping_add(1)
                 }
-                Instruction::Subtract(amount) => {
-                    self.cells[self.pointer] = self.cells[self.pointer].wrapping_sub(*amount)
+                Instruction::Subtract => {
+                    self.cells[self.pointer] = self.cells[self.pointer].wrapping_sub(1)
                 }
-                Instruction::Right(amount) => self.pointer += *amount as usize,
+                Instruction::Right => self.pointer += 1 as usize,
                 Instruction::Output => {
                     output.push(self.cells[self.pointer] as char);
                 }
                 Instruction::Input => self.cells[self.pointer] = read_input(),
-                Instruction::Clear => self.cells[self.pointer] = 0,
             }
         }
         output
