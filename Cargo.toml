@@ -4,7 +4,8 @@ members = [
     "interpreter",
     "lexer",
     "parser",
-    "benchmarks"
+    "benchmarks",
+    "langfuck"
 ]
 
 

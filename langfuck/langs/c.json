@@ -1,0 +1,10 @@
+{
+  "left": "segv",
+  "right": "buffer overflow",
+  "add": "data race",
+  "subtract": "pointer",
+  "openLoop": "ub",
+  "closeLoop": "integer overflow",
+  "output": "nullpointer deref",
+  "input": "stack smash"
+}
