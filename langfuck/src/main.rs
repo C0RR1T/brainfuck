@@ -6,6 +6,7 @@ use parser::Parser;
 use peekmore::{PeekMore, PeekMoreIterator};
 use serde::{Deserialize, Serialize};
 use std::fs;
+use std::io::stdout;
 use std::path::PathBuf;
 use std::str::CharIndices;
 use std::string::String;
@@ -20,8 +21,8 @@ struct Args {
     file: PathBuf,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-struct LangFile {
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct Tokens {
     left: String,
     right: String,
 
@@ -34,6 +35,18 @@ struct LangFile {
     input: String,
     plus: String,
     minus: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct Settings {
+    #[serde(rename = "ignoreWhiteSpace")]
+    ignore_whitespace: bool,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct LangFile {
+    tokens: Tokens,
+    settings: Settings,
 }
 
 struct FirstChar {
@@ -58,24 +71,41 @@ fn main() {
 
     let lang_file = serde_json::from_str::<LangFile>(lang_file.contents_utf8().unwrap()).unwrap();
 
-    let tokens = Lexer::new(lang_file, &source_code).parse();
+    let mut tokens: Tokens = lang_file.tokens;
+
+    if lang_file.settings.ignore_whitespace {
+        tokens.output = remove_whitespace(&tokens.output);
+        tokens.input = remove_whitespace(&tokens.input);
+        tokens.left = remove_whitespace(&tokens.left);
+        tokens.right = remove_whitespace(&tokens.right);
+        tokens.minus = remove_whitespace(&tokens.minus);
+        tokens.plus = remove_whitespace(&tokens.plus);
+        tokens.open_loop = remove_whitespace(&tokens.open_loop);
+        tokens.close_loop = remove_whitespace(&tokens.close_loop);
+    }
+
+    let tokens = Lexer::new(tokens, &source_code, lang_file.settings.ignore_whitespace).parse();
+
+    println!("{:?}", tokens);
 
     match Parser::new(tokens).parse() {
         Ok(tokens) => {
-            Interpreter::new().interpret(&tokens);
+            Interpreter::new(stdout()).interpret(&tokens);
         }
         Err(err) => error_messages::print_error(&err, &source_code),
     }
 }
 
 struct Lexer<'a> {
-    language: LangFile,
+    language: Tokens,
     code: PeekMoreIterator<CharIndices<'a>>,
     first_char: FirstChar,
+    ignore_whitespace: bool,
 }
 
 impl<'a> Lexer<'a> {
-    fn new(language: LangFile, code: &'a str) -> Self {
+    fn new(language: Tokens, code: &'a str, ignore_whitespace: bool) -> Self {
+        println!("{:?}", language);
         Lexer {
             code: code.char_indices().peekmore(),
             first_char: FirstChar {
@@ -88,6 +118,7 @@ impl<'a> Lexer<'a> {
                 input: get_first_char(&language.input),
                 output: get_first_char(&language.output),
             },
+            ignore_whitespace,
             language,
         }
     }
@@ -95,105 +126,122 @@ impl<'a> Lexer<'a> {
     fn parse(&mut self) -> Vec<LexerToken> {
         let mut tokens = Vec::new();
         while let Some((i, char)) = self.next() {
-            if char == self.first_char.left
-                && check_if_string_equals(
-                    &self.peek_string(&self.language.left.len() - 1),
-                    &char,
-                    &self.language.left,
-                )
-            {
-                self.consume_elements(self.language.left.len() - 1);
+            let (matches, amount) = self.compute_token(
+                &char,
+                &self.first_char.left.clone(),
+                &self.language.left.clone(),
+            );
+
+            if matches {
+                tokens.push(LexerToken::new(Span::from(i, i + amount), TokenType::Left));
+                break;
+            }
+
+            let (matches, amount) = self.compute_token(
+                &char,
+                &self.first_char.right.clone(),
+                &self.language.right.clone(),
+            );
+
+            if matches {
+                tokens.push(LexerToken::new(Span::from(i, i + amount), TokenType::Right));
+                break;
+            }
+
+            let (matches, amount) = self.compute_token(
+                &char,
+                &self.first_char.plus.clone(),
+                &self.language.plus.clone(),
+            );
+
+            if matches {
+                tokens.push(LexerToken::new(Span::from(i, i + amount), TokenType::Add));
+                break;
+            }
+
+            let (matches, amount) = self.compute_token(
+                &char,
+                &self.first_char.minus.clone(),
+                &self.language.minus.clone(),
+            );
+
+            if matches {
                 tokens.push(LexerToken::new(
-                    Span::from(i, self.language.left.len() - 1),
-                    TokenType::Left,
-                ))
-            } else if char == self.first_char.right
-                && check_if_string_equals(
-                    &self.peek_string(&self.language.right.len() - 1),
-                    &char,
-                    &self.language.left,
-                )
-            {
-                self.consume_elements(&self.language.right.len() - 1);
-                tokens.push(LexerToken::new(
-                    Span::from(i, self.language.right.len() - 1),
-                    TokenType::Right,
-                ))
-            } else if char == self.first_char.plus
-                && check_if_string_equals(
-                    &self.peek_string(&self.language.plus.len() - 1),
-                    &char,
-                    &self.language.plus,
-                )
-            {
-                self.consume_elements(&self.language.plus.len() - 1);
-                tokens.push(LexerToken::new(
-                    Span::from(i, self.language.plus.len() - 1),
-                    TokenType::Add,
-                ));
-            } else if char == self.first_char.minus
-                && check_if_string_equals(
-                    &self.peek_string(&self.language.minus.len() - 1),
-                    &char,
-                    &self.language.minus,
-                )
-            {
-                self.consume_elements(&self.language.minus.len() - 1);
-                tokens.push(LexerToken::new(
-                    Span::from(i, self.language.minus.len() - 1),
+                    Span::from(i, i + amount),
                     TokenType::Subtract,
                 ));
-            } else if char == self.first_char.open_loop
-                && check_if_string_equals(
-                    &self.peek_string(&self.language.open_loop.len() - 1),
-                    &char,
-                    &self.language.open_loop,
-                )
-            {
-                self.consume_elements(&self.language.open_loop.len() - 1);
+                break;
+            }
+
+            let (matches, amount) = self.compute_token(
+                &char,
+                &self.first_char.input.clone(),
+                &self.language.input.clone(),
+            );
+
+            if matches {
+                tokens.push(LexerToken::new(Span::from(i, i + amount), TokenType::Input));
+                break;
+            }
+
+            let (matches, amount) = self.compute_token(
+                &char,
+                &self.first_char.output.clone(),
+                &self.language.output.clone(),
+            );
+
+            if matches {
                 tokens.push(LexerToken::new(
-                    Span::from(i, self.language.open_loop.len() - 1),
+                    Span::from(i, i + amount),
+                    TokenType::Output,
+                ));
+                break;
+            }
+
+            let (matches, amount) = self.compute_token(
+                &char,
+                &self.first_char.open_loop.clone(),
+                &self.language.open_loop.clone(),
+            );
+
+            if matches {
+                tokens.push(LexerToken::new(
+                    Span::from(i, i + amount),
                     TokenType::OpenLoop,
                 ));
-            } else if char == self.first_char.close_loop
-                && check_if_string_equals(
-                    &self.peek_string(&self.language.close_loop.len() - 1),
-                    &char,
-                    &self.language.close_loop,
-                )
-            {
-                self.consume_elements(&self.language.close_loop.len() - 1);
+                break;
+            }
+
+            let (matches, amount) = self.compute_token(
+                &char,
+                &self.first_char.close_loop.clone(),
+                &self.language.close_loop.clone(),
+            );
+
+            if matches {
                 tokens.push(LexerToken::new(
-                    Span::from(i, self.language.close_loop.len() - 1),
+                    Span::from(i, i + amount),
                     TokenType::CloseLoop,
                 ));
-            } else if char == self.first_char.input
-                && check_if_string_equals(
-                    &self.peek_string(&self.language.input.len() - 1),
-                    &char,
-                    &self.language.input,
-                )
-            {
-                self.consume_elements(&self.language.input.len() - 1);
-                tokens.push(LexerToken::new(
-                    Span::from(i, self.language.input.len() - 1),
-                    TokenType::Input,
-                ));
-            } else if char == self.first_char.output
-                && check_if_string_equals(
-                    &self.peek_string(&self.language.output.len() - 1),
-                    &char,
-                    &self.language.output,
-                )
-            {
-                self.consume_elements(&self.language.output.len() - 1);
-                tokens.push(LexerToken::new(
-                    Span::from(i, self.language.output.len() - 1),
-                    TokenType::Input,
-                ));
+                break;
             }
         }
         tokens
+    }
+
+    fn compute_token(&mut self, char: &char, first_char: &char, to_check: &str) -> (bool, usize) {
+        if char == first_char {
+            let (str, amount) = self.peek_string(to_check.len() - 1);
+
+            let matches = check_if_string_equals(&str, char, to_check);
+            println!("{} == {}{}: {}", to_check, char, str, matches);
+            assert_eq!(format!("{}{}", char, str).len(), to_check.len());
+            if matches {
+                self.consume_elements(amount);
+            }
+            return (matches, amount);
+        }
+        (false, 0)
     }
 
     fn next(&mut self) -> Option<(usize, char)> {
@@ -207,22 +255,33 @@ impl<'a> Lexer<'a> {
         self.code.peek_nth(amount)
     }
 
-    fn peek_string(&mut self, length: usize) -> String {
+    fn peek_string(&mut self, length: usize) -> (String, usize) {
         let mut string = String::new();
-        for x in 0..length {
-            if let Some((_, char)) = self.peek_nth(x) {
-                string.push(*char)
+        let mut amount = 0;
+        let ignore_whitespace = self.ignore_whitespace;
+        while string.len() < length {
+            if let Some((_, char)) = self.peek_nth(amount) {
+                if !ignore_whitespace || !char.is_whitespace() && *char != '\n' {
+                    string.push(*char)
+                }
+                amount += 1;
             } else {
                 break;
             }
         }
-        string
+
+        (string, amount)
     }
 
     fn consume_elements(&mut self, amount: usize) {
         for _ in 0..amount {
             self.next();
         }
+    }
+
+    fn advance_cursor(&mut self) -> Option<&(usize, char)> {
+        self.code.advance_cursor();
+        self.peek()
     }
 }
 
@@ -232,4 +291,10 @@ fn get_first_char(s: &str) -> char {
 
 fn check_if_string_equals(other_str: &str, char: &char, to_check: &str) -> bool {
     format!("{}{}", *char, other_str) == to_check
+}
+
+fn remove_whitespace(s: &str) -> String {
+    s.chars()
+        .filter(|x| !x.is_whitespace() && *x != '\n')
+        .collect()
 }

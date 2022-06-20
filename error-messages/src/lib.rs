@@ -29,10 +29,15 @@ fn print_location(span: &Span, input: &str, note: &str) {
         "{} {}{}{}",
         " ".repeat(info_string.len() - 3),
         "|".blue(),
-        " ".repeat(code_line.split_at(span.from).0.len() + 1),
+        " ".repeat(
+            code_line
+                .split_at(get_span_of_line(span, input).from)
+                .0
+                .len()
+                + 1
+        ),
         "^".repeat(span.to - span.from).bright_red(),
     );
-    " ".repeat(info_string.len() - 3);
     eprintln!(
         "{}{} {}: {}",
         " ".repeat(info_string.len() - 2),
@@ -49,6 +54,17 @@ fn get_line(line: usize, input: &str) -> &str {
 fn get_line_of_error(span: &Span, input: &str) -> usize {
     input
         .char_indices()
-        .filter(|(i, char)| *i < span.from && *char == '\n')
+        .filter(|(i, char)| *i <= span.from && *char == '\n')
         .count()
+        + 1
+}
+
+fn get_span_of_line(span: &Span, input: &str) -> Span {
+    let line = get_line_of_error(span, input);
+    let lines_before = (0..line).map(|x| get_line(x, input)).collect::<String>();
+
+    Span {
+        from: span.from - lines_before.len(),
+        to: span.to - lines_before.len(),
+    }
 }

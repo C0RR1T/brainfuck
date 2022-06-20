@@ -1,10 +1,15 @@
 {
-  "left": "pointer -= 1;",
-  "right": "pointer += 1;",
-  "plus": "cells[pointer] += 1;",
-  "minus": "cells[pointer] -= 1;",
-  "openLoop": "while(cells[pointer] > 0) {",
-  "closeLoop": "cells[pointer]--;}",
-  "output": "System.out.println(cells[pointer]);",
-  "input": "cells[pointer] = System.in.readLine();"
+  "tokens": {
+    "left": "pointer -= 1;",
+    "right": "pointer += 1;",
+    "plus": "cells[pointer] += 1;",
+    "minus": "cells[pointer] -= 1;",
+    "openLoop": "while(cells[pointer] > 0) {",
+    "closeLoop": "cells[pointer] -= 1;}",
+    "output": "System.out.println(cells[pointer]);",
+    "input": "cells[pointer] = System.in.readLine();"
+  },
+  "settings": {
+    "ignoreWhiteSpace": true
+  }
 }
