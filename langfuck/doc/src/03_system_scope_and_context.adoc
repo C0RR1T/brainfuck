@@ -1,0 +1,38 @@
+[[section-system-scope-and-context]]
+== System Scope and Context
+
+=== Business Context
+
+[plantuml]
+----
+@startuml
+left to right direction
+actor User
+component Langfuck
+component Parser
+component Interpreter
+
+note top of Langfuck
+Lexes the Input file
+end note
+
+note top of Parser
+Parses the content of the file and does syntax analysis
+end note
+
+User --> Langfuck : Provides file and language
+Langfuck --> Parser: Provides the lexed token to the parser for syntax analysis
+Parser --> Interpreter: Provides the parsed token to the Interpreter
+@enduml
+----
+
+
+=== Technical Context
+
+
+
+**<Diagram or Table>**
+
+**<optionally: Explanation of technical interfaces>**
+
+**<Mapping Input/Output to Channels>**

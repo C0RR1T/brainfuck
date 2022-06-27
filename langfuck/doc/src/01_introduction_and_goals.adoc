@@ -1,0 +1,36 @@
+[[section-introduction-and-goals]]
+== Introduction and Goals
+This language is a Transpiler for brainfuck. The program can transpile every
+dialect of brainfuck, i.E. cow. We use json files stored in the /langs subdirectory, which provide mappings to the original brainfuck characters (just typed out). These languages will be included in the binary at compile time. This means that the end-user cannot provide his own language (he could by contributing to https://github.com/C0RR1T/brainfuck[the Repository]). This prevents validating the json, because we know that the files in the langs directory is valid (through manually checking the pull requests). +
+
+Basically, through this method we could compile every language ever, given that it is turing complete. +
+
+Also, this transpiler also ships with an interpreter, which means langfuck is JITT (Just in time transpiled). The interpreter is out of this scope since it is another project.
+
+Langfuck acts more as a lexxer, which passes the brainfuck tokens to the parser and then the interpreter.
+
+
+
+=== Requirements Overview
+
+* [ ] Finished Documentation
+* [ ] Short presentation about langfuck
+* [ ] Working transpiler
+* [ ] Transpiler can output brainfuck code into a file
+* [x] Transpiler has program arguments which are parsed into options
+* [x] Transpiler can call interpreter
+
+=== Quality Goals
+
+* The Transpiler is well tested
+* The transpiler can transpile every instruction of every language file
+* The program arguments are easy to understand
+
+=== Stakeholders
+
+[options="header",cols="1,1,2"]
+|===
+|Role| Name | Expectations
+|Stakeholder |Von Känel a| - Finished Documentation
+                            - Short presentation about langfuck
+|===
