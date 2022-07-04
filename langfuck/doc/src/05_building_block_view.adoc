@@ -3,107 +3,74 @@
 
 == Building Block View
 
-
-
 === Whitebox Overall System
 
+[plantuml]
+----
+@startuml
+actor User
+
+package Program {
+component Langfuck
+
+note right of Langfuck
+Transpiles / lexes the file.
+end note
+
+component Parser
+
+note right of Parser
+Parses the file.
+end note
+
+component Interpreter
+note right of Interpreter
+Interprets the file.
+Outputs to stdout
+end note
+
+Langfuck --> Parser : Parses the lexed tokens
+Parser --> Interpreter : Provides the parsed tokens
 
 
-_**<Overview Diagram>**_
+}
 
-Motivation::
 
-_<text explanation>_
+User --> Langfuck : Inputs source code and language file
 
+
+@enduml
+----
+
+
+
+_**The user only uses one program, but in the program there are three key components: Langfuck itself, the Parser and then the Interpreter.**_
 
 Contained Building Blocks::
-_<Description of contained building block (black boxes)>_
 
-Important Interfaces::
-_<Description of important interfaces>_
+* Langfuck
+* Parser
+* Interpreter
 
-
-
-
-==== <Name black box 1>
-
-
-
-_<Purpose/Responsibility>_
-
-_<Interface(s)>_
-
-_<(Optional) Quality/Performance Characteristics>_
-
-_<(Optional) Directory/File Location>_
-
-_<(Optional) Fulfilled Requirements>_
-
-_<(optional) Open Issues/Problems/Risks>_
+[options = "header", cols="1,2e"]
+|===
+|Name|Description
+|Langfuck|Reads source code and transpiles it into brainfuck code
+|Parser|Does Syntax analysis
+|Interpreter|Runs the brainfuck code
+|===
 
 
 
-
-==== <Name black box 2>
-
-_<black box template>_
-
-==== <Name black box n>
-
-_<black box template>_
-
-
-==== <Name interface 1>
-
-...
-
-==== <Name interface m>
+==== Langfuck
+Langfuck reads the source code and maps it to the language file input by the user. Langfuck then takes this input and transpiles it into brainfuck code.
 
 
 
-=== Level 2
+==== Parser
 
+_The parser does syntax analysis (i.E is the loop closed, is there any loop ending that doesn't belong here).  It also transforms it into Parsertokens_
 
+==== Interpreter
 
-==== White Box _<building block 1>_
-
-
-
-_<white box template>_
-
-==== White Box _<building block 2>_
-
-
-_<white box template>_
-
-...
-
-==== White Box _<building block m>_
-
-
-_<white box template>_
-
-
-
-=== Level 3
-
-
-
-
-==== White Box <_building block x.1_>
-
-
-
-
-_<white box template>_
-
-
-==== White Box <_building block x.2_>
-
-_<white box template>_
-
-
-
-==== White Box <_building block y.1_>
-
-_<white box template>_
+_Takes the token from the Parser and executes the code_

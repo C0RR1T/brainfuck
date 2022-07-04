@@ -4,6 +4,10 @@
 [cols="1,2"]
 |===
 |Implementation in Rust| Because the interperter is written in Rust, it was decided that the Transpiler should be written in Rust.
+|Visibility| The project should be open sourced
+|IDE| We chose CLion with the Rust plugin
+|Timeframe|Two weeks
+|Dependency managment|Cargo|
 |===
 
 

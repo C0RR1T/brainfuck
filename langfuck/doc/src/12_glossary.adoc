@@ -7,9 +7,9 @@
 |===
 |Term |Definition
 
-|<Term-1>
-|<definition-1>
+|Rust
+|A compiled programming language
+|Brainfuck
+d|_Language only having keywords like_ `[]+-<>.,`
 
-|<Term-2>
-|<definition-2>
 |===

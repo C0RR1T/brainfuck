@@ -1,5 +1,6 @@
 [[section-solution-strategy]]
 == Solution Strategy
+The program is written in Rust. Langfuck acts more as a lexer than a transpiler because we do not output transpiled code. We decided to make the language files integrated with the application, so we can manually validate the language files. The user cannot use their own language without contributing to the repository.
 
 
 

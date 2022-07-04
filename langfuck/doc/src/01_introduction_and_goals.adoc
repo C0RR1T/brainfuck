@@ -14,7 +14,7 @@ Langfuck acts more as a lexxer, which passes the brainfuck tokens to the parser 
 === Requirements Overview
 
 * [ ] Finished Documentation
-* [ ] Short presentation about langfuck
+* [x] Short presentation about langfuck
 * [ ] Working transpiler
 * [ ] Transpiler can output brainfuck code into a file
 * [x] Transpiler has program arguments which are parsed into options

@@ -6,7 +6,6 @@
 [plantuml]
 ----
 @startuml
-left to right direction
 actor User
 component Langfuck
 component Parser
@@ -28,11 +27,30 @@ Parser --> Interpreter: Provides the parsed token to the Interpreter
 
 
 === Technical Context
-
-
-
-**<Diagram or Table>**
-
-**<optionally: Explanation of technical interfaces>**
-
-**<Mapping Input/Output to Channels>**
+:check: &#10003;
+:cross: &#x2717;
+Dependencies of Langfuck and the other packages used in the Transpiler / Interpreter:
+[options="header",cols="2,1,1"]
+|===
+|Name|Version|Package made by myself
+3.1+^h|Langfuck (langfuck)
+|clap|3.1.18| {cross}
+|include_dir|0.7.2| {cross}
+|serde_json|1.0.81| {cross}
+|peekmore|1.0.0| {cross}
+|serde|1.0.137| {cross}
+|interpreter| _No version_| {check}
+|parser| _No version_| {check}
+|error-messages| _No version_| {check}
+3.1+^h|Parser (parser)
+|peekmore|1.0.0| {cross}
+|lexer|_No version_| {check}
+3.1+^h|Interpreter (interpreter)
+|lexer|_No version_| {check}
+|error_messages|_No version_| {check}
+|owo-colors|3.4.0| {cross}
+3.1+^h|Error-Message printer
+|owo-colors|3.4.0| {cross}
+|parser|_No version_|{check}
+|lexer|_No version_|{check}
+|===
