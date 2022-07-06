@@ -4,15 +4,65 @@
 
 
 
-=== <Runtime Scenario 1>
+=== Everything works fine
+
+[plantuml]
+----
+@startuml
+actor User
+participant Langfuck
+participant Parser
+participant Interpreter
+
+User -> Langfuck : Passes the source code and the language
+Langfuck -> Parser : Passes the lexed code
+Parser -> Interpreter : Passes the Parsed tokens
+Interpreter -> User : Output to console
+@enduml
+----
 
 
-* _<insert runtime diagram or textual description of the scenario>_
-* _<insert description of the notable aspects of the interactions between the
-building block instances depicted in this diagram.>_
+=== Language File doesn't exist
 
-=== <Runtime Scenario 2>
+[plantuml]
+----
+@startuml
+actor User
+participant Langfuck
+participant Parser
+participant Interpreter
 
-=== ...
+User -> Langfuck : Passes the source code and the language
+Langfuck -> User : Throws error saying language file doesn't exist
+@enduml
+----
 
-=== <Runtime Scenario n>
+=== Source code file doesn't exist
+[plantuml]
+----
+@startuml
+actor User
+participant Langfuck
+participant Parser
+participant Interpreter
+
+User -> Langfuck : Passes the source code and the language
+Langfuck -> User : Throws error saying source code file doesn't exist
+@enduml
+----
+
+=== Parser finds a syntax error
+
+[plantuml]
+----
+@startuml
+actor User
+participant Langfuck
+participant Parser
+participant Interpreter
+
+User -> Langfuck : Passes the source code and the language
+Langfuck -> Parser : Passes the lexed code
+Parser -> User : Throws error with specific syntax error (loop not closed before EOF, Unexpected loop closing) and the postion of the error
+@enduml
+----

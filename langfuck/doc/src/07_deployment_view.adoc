@@ -3,40 +3,20 @@
 
 == Deployment View
 
+[plantuml]
+----
+@startuml
+actor User
+[Frontend (stdout/stdin)]
+[Backend (Langfuck)]
 
+User --> [Frontend (stdout/stdin)] : Inputs in program arguments
+[Frontend (stdout/stdin)] --> User : Outputs to console
+[Frontend (stdout/stdin)] --> [Backend (Langfuck)]: Gives Program Arguments to Backend
+[Backend (Langfuck)] --> [Frontend (stdout/stdin)]: Prints output to stdout
+@enduml
+----
 
-=== Infrastructure Level 1
+=== Deployment
 
-
-
-_**<Overview Diagram>**_
-
-Motivation::
-
-_<explanation in text form>_
-
-Quality and/or Performance Features::
-
-_<explanation in text form>_
-
-Mapping of Building Blocks to Infrastructure::
-_<description of the mapping>_
-
-
-=== Infrastructure Level 2
-
-
-
-==== _<Infrastructure Element 1>_
-
-_<diagram + explanation>_
-
-==== _<Infrastructure Element 2>_
-
-_<diagram + explanation>_
-
-...
-
-==== _<Infrastructure Element n>_
-
-_<diagram + explanation>_
+The code is distributed as a compiled exe. The user just needs a linker (which should be on the OS per default)

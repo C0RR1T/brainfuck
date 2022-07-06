@@ -1,22 +1,21 @@
 [[section-concepts]]
-== Cross-cutting Concepts
+
+=== User Interfaces
+The user interface is the command line
+
+=== Validation
+The Validation of the source code is being done by the parser. If the language file / source code exists is validated by Langfuck
+
+=== Error Handling
+Every error the program throws is an error it cannot recover from. The output depends on the error:
+
+[cols = "1,2", options = "header"]
+|===
+|Error|Description
+|Language File not found| The program says that the language file couldn't be found. Exit code is 1.
+|Source code File not found| The program says that the source code file couldn't be found. Exit code is 1.
+|Syntax error| The program shows the exact position of the error with a description and help to fix the problem. Exit code is 1.
+|===
 
 
 
-
-
-=== _<Concept 1>_
-
-_<explanation>_
-
-
-
-=== _<Concept 2>_
-
-_<explanation>_
-
-...
-
-=== _<Concept n>_
-
-_<explanation>_
