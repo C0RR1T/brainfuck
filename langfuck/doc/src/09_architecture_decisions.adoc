@@ -1,5 +1,8 @@
 [[section-design-decisions]]
 == Architecture Decisions
+The program is written in Rust. How does Langfuck determine a keyword?
+
+Langfuck goes through every character and check if the character matches to a first character of every keyword and checks if they match. If they do, Langfuck gets the next n characters the length of the matching keyword. If the keyword matches, the keyword gets added to the lexed tokens.
 
 
 

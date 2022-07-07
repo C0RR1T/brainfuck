@@ -7,7 +7,7 @@ Basically, through this method we could compile every language ever, given that 
 
 Also, this transpiler also ships with an interpreter, which means langfuck is JITT (Just in time transpiled). The interpreter is out of this scope since it is another project.
 
-Langfuck acts more as a lexxer, which passes the brainfuck tokens to the parser and then the interpreter.
+Langfuck acts more as a lexer, which passes the brainfuck tokens to the parser and then the interpreter.
 
 
 

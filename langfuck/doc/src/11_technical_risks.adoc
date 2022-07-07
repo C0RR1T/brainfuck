@@ -1,5 +1,11 @@
 [[section-technical-risks]]
 == Risks and Technical Debts
+* Long files could take really long to process
+* The program only covers some cases in tests
+* The program currently doesn't work
+* The program doesn't have any optimizations for the source code
+* The program doesn't have alot of comments
+* The program is possibly not written for efficiency rather for maintainability
 
 
 

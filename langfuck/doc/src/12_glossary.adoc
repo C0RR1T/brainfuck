@@ -3,7 +3,7 @@
 
 
 
-[cols="e,2e" options="header"]
+[cols="1,2e" options="header"]
 |===
 |Term |Definition
 
@@ -11,5 +11,14 @@
 |A compiled programming language
 |Brainfuck
 d|_Language only having keywords like_ `[]+-<>.,`
+|Language file|A JSON File storing the keywords for every operation in Brainfuck
+|EOF|End-of-file
+|Transpiler|Rewrites source code in a language into source code of another language
+|Lexer|Reads the source code file and makes simple tokens without any logic
+|Parser|Takes the tokens of the Lexer and makes a syntax Tree with logic for the Interpreter to execute
+|Interpreter|Takes the Parser tokens and executes them one by one
+|Source code|Code that is written into a file by the user of Langfuck
+|IDE|Integrated Development Environment
+
 
 |===

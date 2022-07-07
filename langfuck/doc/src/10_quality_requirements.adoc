@@ -1,13 +1,53 @@
 [[section-quality-scenarios]]
 == Quality Requirements
 
-
-
-
 === Quality Tree
+[plantuml]
+----
+@startuml
+rectangle Quality
+rectangle Maintainability
+rectangle Compatibility
+rectangle Efficiency
+rectangle Usability
+rectangle Reliability
+
+Quality -- Maintainability
+Quality -- Compatibility
+Quality -- Efficiency
+Quality -- Usability
+Quality -- Reliability
+
+Maintainability -- Q01
+Maintainability -- Q02
+Compatibility -- Q03
+Maintainability -- Q04
+Maintainability -- Q05
+Efficiency -- Q06
+Efficiency -- Q07
+Usability -- Q08
+
+Reliability -- Q09
+
+@enduml
+----
 
 
 
 === Quality Scenarios
+
+[options = "header", cols = "1,4e"]
+|===
+|ID|Scenario
+|Q01|The Documentation is well written
+|Q02|A new Programmer can work on the project after reading the documentation
+|Q03|The Program can be compiled to every major OS
+|Q04|The source code for Langfuck is well commented
+|Q05|The program is well tested
+|Q06|The Lexer is not noticeable during runtime
+|Q07|The Lexer does not consume alot of RAM
+|Q08|The Program Arguments are easy to understand
+|Q09|The Program should always produce the same output given the same input
+|===
 
 
