@@ -78,6 +78,13 @@ impl Instruction {
             _ => 0,
         }
     }
+
+    pub fn is_loop(&self) -> bool {
+        match self {
+            Instruction::Loop(_) | Instruction::Clear | Instruction::Multiply { .. } | Instruction::Divide { .. } => true,
+            _ => false
+        }
+    }
 }
 
 pub struct Parser {
