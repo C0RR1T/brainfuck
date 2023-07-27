@@ -72,7 +72,7 @@ impl Interpreter {
         match instructions {
             Ok(instructions) => {
                 if opt {
-                    let instructions = optimizer::Optimizer::new(instructions).optimize();
+                    let instructions = optimizer::Optimizer::new(&instructions).optimize();
                     self.interpret_ins(&instructions)
                 } else {
                     self.interpret_ins(&instructions)
@@ -117,10 +117,12 @@ fn read_input() -> u8 {
     buf[0]
 }
 
-// #[test]
-// fn hello_world() {
-//     assert_eq!(
-//         Interpreter::new().interpret_ins(&parser::hello_world()[..]),
-//         "Hello World!\n"
-//     );
-// }
+ #[test]
+ fn hello_world() {
+    Interpreter::new().interpret( "Hello World!\n", true).
+
+     assert_eq!(
+         Interpreter::new().interpret_ins(&parser::hello_world()[..]),
+         "Hello World!\n"
+     );
+ }
