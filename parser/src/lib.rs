@@ -3,8 +3,6 @@ extern crate core;
 use std::fmt::{Debug, Display, Formatter};
 use std::vec::IntoIter;
 
-
-
 use lexer::{LexerToken, Span, TokenType};
 
 use crate::ParserError::UnexpectedEOF;
@@ -20,17 +18,15 @@ pub enum ParserError {
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub enum Instruction {
     Loop(Vec<Instruction>),
-    Add(u8),
-    Subtract(u8),
-    Left(u8),
-    Right(u8),
+    Add(isize),
+    Subtract(isize),
+    Left(isize),
+    Right(isize),
     Clear,
     Output,
     Input,
     // MC: Multiplicand (In the loop) / MP: Multiplier (Multiplier / current cell)
-    Multiply { mc: u8, offset: isize },
-    // DV: Dividend (In the loop)
-    Divide { dv: u8, offset: isize },
+    Multiply { mc: isize, offset: isize },
 }
 
 impl Display for Instruction {
@@ -39,7 +35,7 @@ impl Display for Instruction {
             Instruction::Loop(instructions) => {
                 f.write_str("[")?;
                 for ins in instructions {
-                    f.write_str(&*format!("{}", ins))?;
+                    f.write_str(&format!("{}", ins))?;
                 }
                 f.write_str("]")?;
             }
@@ -51,14 +47,14 @@ impl Display for Instruction {
             Instruction::Input => f.write_str(",")?,
             Instruction::Multiply { offset, mc } => {
                 if *offset >= 0 {
-                    f.write_str(&*format!(
+                    f.write_str(&format!(
                         "[{}{}{}-]",
                         ">".repeat(*offset as usize),
                         "+".repeat(*mc as usize),
                         "<".repeat(*offset as usize)
                     ))?;
                 } else {
-                    f.write_str(&*format!(
+                    f.write_str(&format!(
                         "[{}{}{}-]",
                         "<".repeat(*offset as usize),
                         "+".repeat(*mc as usize),
@@ -66,24 +62,7 @@ impl Display for Instruction {
                     ))?;
                 }
             }
-            Instruction::Divide { offset, dv } => {
-                if *offset >= 0 {
-                    f.write_str(&*format!(
-                        "[{}{}{}-]",
-                        ">".repeat(*offset as usize),
-                        "-".repeat(*dv as usize),
-                        "<".repeat(*offset as usize)
-                    ))?;
-                } else {
-                    f.write_str(&*format!(
-                        "[{}{}{}-]",
-                        "<".repeat(*offset as usize),
-                        "-".repeat(*dv as usize),
-                        ">".repeat(*offset as usize)
-                    ))?;
-                }
-            }
-            Instruction::Output => f.write_str(".")?
+            Instruction::Output => f.write_str(".")?,
         }
         Ok(())
     }
@@ -92,10 +71,10 @@ impl Display for Instruction {
 impl Instruction {
     pub fn to_number(&self) -> isize {
         match self {
-            Instruction::Add(plus) => *plus as isize,
-            Instruction::Subtract(minus) => -(*minus as isize),
-            Instruction::Left(left) => -(*left as isize),
-            Instruction::Right(right) => *right as isize,
+            Instruction::Add(plus) => *plus,
+            Instruction::Subtract(minus) => -*minus,
+            Instruction::Left(left) => -*left,
+            Instruction::Right(right) => *right,
             _ => 0,
         }
     }

@@ -79,7 +79,7 @@ impl Optimizer {
         }
     }
 
-    fn combine_ins(amt: u8, ins: &Instruction) -> Instruction {
+    fn combine_ins(amt: isize, ins: &Instruction) -> Instruction {
         match ins {
             Instruction::Add(_) => Instruction::Add(amt),
             Instruction::Subtract(_) => Instruction::Subtract(amt),
@@ -109,7 +109,7 @@ impl Optimizer {
                                 if let Some(Instruction::Subtract(1)) = iter.peek() {
                                     return Some(Multiply {
                                         mc: *plus,
-                                        offset: -(*amt_left as isize),
+                                        offset: -*amt_left,
                                     });
                                 }
                             }
@@ -123,7 +123,7 @@ impl Optimizer {
                                 if let Some(Instruction::Subtract(1)) = iter.peek() {
                                     return Some(Multiply {
                                         mc: *plus,
-                                        offset: (*amt_right as isize),
+                                        offset: *amt_right,
                                     });
                                 }
                             }
@@ -188,7 +188,7 @@ impl Optimizer {
         None
     }
 
-    fn compare_plus_minus(plus: &u8, minus: &u8) -> Option<Instruction> {
+    fn compare_plus_minus(plus: &isize, minus: &isize) -> Option<Instruction> {
         match plus.cmp(minus) {
             Ordering::Less => Some(Instruction::Subtract(minus - plus)),
             Ordering::Equal => None,
@@ -196,7 +196,7 @@ impl Optimizer {
         }
     }
 
-    fn compare_left_right(left: &u8, right: &u8) -> Option<Instruction> {
+    fn compare_left_right(left: &isize, right: &isize) -> Option<Instruction> {
         match left.cmp(right) {
             Ordering::Less => Some(Instruction::Right(right - left)),
             Ordering::Equal => None,
@@ -204,15 +204,15 @@ impl Optimizer {
         }
     }
 
-    fn combine_tokens(&mut self, instruction_to_cmp: &Instruction) -> u8 {
+    fn combine_tokens(&mut self, instruction_to_cmp: &Instruction) -> isize {
         Self::combine_tokens_iter(&mut self.instructions, instruction_to_cmp)
     }
 
     fn combine_tokens_iter(
         ins: &mut PeekMoreIterator<IntoIter<Instruction>>,
         instruction_to_cmp: &Instruction,
-    ) -> u8 {
-        let mut amount: u8 = 1;
+    ) -> isize {
+        let mut amount = 1;
 
         while let Some(instruction) = ins.peek_nth((amount) as usize) {
             if *instruction_to_cmp == *instruction {
@@ -221,7 +221,7 @@ impl Optimizer {
                 break;
             }
 
-            if amount == u8::MAX {
+            if amount == isize::MAX {
                 break;
             }
         }
