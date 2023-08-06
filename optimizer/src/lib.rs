@@ -36,6 +36,7 @@ impl<'a> Optimizer<'a> {
             if let Some(new_instruction) = self.optimize_instruction(ins.clone()) {
                 instructions.push(new_instruction)
             }
+            self.index += 1;
         }
 
         #[cfg(debug_assertions)]
@@ -69,7 +70,7 @@ impl<'a> Optimizer<'a> {
         match ins {
             Loop(loop_instructions) => Self::optimize_loops(&loop_instructions),
             Clear => {
-                if let Some(Loop(_) | Multiply { .. } | Instruction::Divide { .. } | Clear) =
+                if let Some(Loop(_) | Multiply { .. } | Clear) =
                     self.instructions.get(self.index + 1)
                 {
                     self.index += 1;
@@ -108,7 +109,7 @@ impl<'a> Optimizer<'a> {
                 if amt_left == amt_right =>
             {
                 return Some(Multiply {
-                    mc: *plus,
+                    multiplicand: *plus,
                     offset: -(*amt_left as isize),
                 });
             }
@@ -214,4 +215,11 @@ impl<'a> Optimizer<'a> {
 
         amount
     }
+}
+
+
+#[test]
+fn clear_loop() {
+    let opt = Optimizer::new(&[Instruction::Loop(vec![Instruction::Subtract(1)])]).optimize();
+    assert_eq!(opt, vec![Instruction::Clear])
 }

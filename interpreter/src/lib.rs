@@ -47,7 +47,8 @@ impl<W: Write> Interpreter<W> {
                 }
                 Instruction::Input => self.cells[self.pointer] = Wrapping(read_input()),
                 Instruction::Clear => self.cells[self.pointer] = Wrapping(0),
-                Instruction::Multiply { offset, mc } => {
+                Instruction::Multiply { offset, multiplicand } => {
+                    // TODO: Fix this mess
                     let old_pointer = self.pointer;
                     self.offset_to_pointer(*offset);
                     self.cells[self.pointer] = self.cells[self.pointer]
@@ -65,7 +66,7 @@ impl<W: Write> Interpreter<W> {
         match instructions {
             Ok(instructions) => {
                 if opt {
-                    let instructions = optimizer::Optimizer::new(instructions).optimize();
+                    let instructions = optimizer::Optimizer::new(&instructions).optimize();
                     self.interpret_ins(&instructions)
                 } else {
                     self.interpret_ins(&instructions)

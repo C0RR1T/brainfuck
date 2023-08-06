@@ -25,8 +25,10 @@ pub enum Instruction {
     Clear,
     Output,
     Input,
-    // MC: Multiplicand (In the loop) / MP: Multiplier (Multiplier / current cell)
-    Multiply { mc: isize, offset: isize },
+    /// Multiply is based on the common brainfuck operation `>+++[<++>--]`.
+    /// In this example 3 and 2 are multiplied into cell 0. Mc corresponds to the additions in the loop, the example being 2.
+    /// Offset is the amount of offset from the cell where the other value is stored to the result cell
+    Multiply { multiplicand: isize, offset: isize },
 }
 
 impl Display for Instruction {
@@ -45,7 +47,7 @@ impl Display for Instruction {
             Instruction::Right(amount) => f.write_str(&">".repeat(*amount as usize))?,
             Instruction::Clear => f.write_str("[-]")?,
             Instruction::Input => f.write_str(",")?,
-            Instruction::Multiply { offset, mc } => {
+            Instruction::Multiply { offset, multiplicand: mc } => {
                 if *offset >= 0 {
                     f.write_str(&format!(
                         "[{}{}{}-]",
@@ -80,10 +82,7 @@ impl Instruction {
     }
 
     pub fn is_loop(&self) -> bool {
-        match self {
-            Instruction::Loop(_) | Instruction::Clear | Instruction::Multiply { .. } | Instruction::Divide { .. } => true,
-            _ => false
-        }
+        matches!(self, Instruction::Loop(_) | Instruction::Clear)
     }
 }
 

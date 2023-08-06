@@ -4,7 +4,6 @@ use std::fmt::Formatter;
 pub fn lex(input: &str) -> Vec<LexerToken> {
     input
         .char_indices()
-        .into_iter()
         .filter_map(|(i, t)| match t {
             '<' => Some((i, TokenType::Left)),
             '>' => Some((i, TokenType::Right)),
