@@ -1,8 +1,7 @@
 use std::cmp::Ordering;
-
 use std::vec::IntoIter;
 
-use peekmore::{PeekMore, PeekMoreIterator};
+use peekmore::{PeekMore};
 
 use parser::Instruction;
 use parser::Instruction::{Clear, Loop, Multiply};
@@ -24,7 +23,7 @@ impl<'a> Optimizer<'a> {
         );
 
         Optimizer {
-            instructions: &instructions[..],
+            instructions,
             index: 0,
         }
     }
@@ -101,27 +100,35 @@ impl<'a> Optimizer<'a> {
         match &optimized[..] {
             // Clear operation
             [Instruction::Add(amount)] | [Instruction::Subtract(amount)] if *amount == 1 => {
-                return Some(Clear);
+                Some(Clear)
             }
             // Multiply to the left operation
-            [Instruction::Left(amt_left), Instruction::Add(plus), Instruction::Right(amt_right), Instruction::Subtract(1)]
-            | [Instruction::Right(amt_right), Instruction::Add(plus), Instruction::Left(amt_left), Instruction::Subtract(1)]
+            [Instruction::Left(amt_left), Instruction::Add(amt), Instruction::Right(amt_right), Instruction::Subtract(1)]
+            | [Instruction::Right(amt_right), Instruction::Add(amt), Instruction::Left(amt_left), Instruction::Subtract(1)]
                 if amt_left == amt_right =>
             {
-                return Some(Multiply {
-                    multiplicand: *plus,
-                    offset: -(*amt_left as isize),
-                });
+                Some(Multiply {
+                    multiplicand: *amt,
+                    offset: *amt_right,
+                })
             }
+             [Instruction::Right(amt_right), Instruction::Subtract(amt), Instruction::Left(amt_left), Instruction::Subtract(1)]
+            | [Instruction::Left(amt_left), Instruction::Subtract(amt), Instruction::Right(amt_right), Instruction::Subtract(1)] if amt_right == amt_left => {
+                 Some(Multiply {
+                     multiplicand: -*amt,
+                     offset: *amt_right,
+                 })
+             }
+
             // Division operation
             _ => {
                 if ins.is_empty() {
                     return None;
                 }
 
-                return Some(Loop(ins.to_vec()));
+                Some(Loop(ins.to_vec()))
             }
-        };
+        }
     }
 
     fn summarize_tokens(instructions: &[Instruction]) -> Vec<Instruction> {
@@ -135,8 +142,8 @@ impl<'a> Optimizer<'a> {
                 | Instruction::Right(_)
                 | Instruction::Add(_)
                 | Instruction::Subtract(_) => new_instructions.push(Self::combine_ins(
-                    Self::combine_tokens_iter(&mut iter, &ins),
-                    &ins,
+                    Self::combine_tokens_iter(&mut iter, ins),
+                    ins,
                 )),
                 token => new_instructions.push(token.clone()),
             }
@@ -166,7 +173,7 @@ impl<'a> Optimizer<'a> {
                     return Self::compare_left_right(left, right);
                 }
             }
-            _ => {}
+            _ => {  }
         }
         None
     }
@@ -220,6 +227,6 @@ impl<'a> Optimizer<'a> {
 
 #[test]
 fn clear_loop() {
-    let opt = Optimizer::new(&[Instruction::Loop(vec![Instruction::Subtract(1)])]).optimize();
-    assert_eq!(opt, vec![Instruction::Clear])
+    let opt = Optimizer::new(&[Loop(vec![Instruction::Subtract(1)])]).optimize();
+    assert_eq!(opt, vec![Clear])
 }

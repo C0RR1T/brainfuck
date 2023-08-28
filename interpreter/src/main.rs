@@ -1,3 +1,4 @@
+use std::io::stdout;
 use std::path::PathBuf;
 
 use clap::Parser;
@@ -15,7 +16,7 @@ struct Arguments {
 fn main() {
     let args: Arguments = Arguments::parse();
 
-    Interpreter::new().interpret_file(
+    Interpreter::new(&mut stdout()).interpret_file(
         args.file.to_str().expect("Expected valid path"),
         !args.no_opt,
     );

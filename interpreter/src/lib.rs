@@ -1,6 +1,6 @@
-use std::io::{stdout, Read, Write};
-use std::num::Wrapping;
 use std::{fs, io};
+use std::io::{Read, Write};
+use std::num::Wrapping;
 
 use error_messages::print_error;
 use lexer::lex;
@@ -8,16 +8,16 @@ use parser::{Instruction, Parser};
 
 const MEM_SIZE: usize = 32_000;
 
-pub struct Interpreter<W: Write> {
+pub struct Interpreter<'a, W: Write> {
     cells: [Wrapping<u8>; MEM_SIZE],
     pointer: usize,
-    out: W,
+    out: &'a mut W,
 }
 
-impl<W: Write> Interpreter<W> {
-    pub fn new(out: W) -> Self
-    where
-        W: Write,
+impl<'a, W: Write> Interpreter<'a, W> {
+    pub fn new(out: &'a mut W) -> Self
+        where
+            W: Write,
     {
         Interpreter {
             cells: [Wrapping(0); MEM_SIZE],
@@ -33,28 +33,28 @@ impl<W: Write> Interpreter<W> {
                 Instruction::Right(amount) => self.offset_to_pointer(*amount),
                 Instruction::Loop(loop_instructions) => self.interpret_loop(loop_instructions),
                 Instruction::Add(amount) => {
-                    self.cells[self.pointer] += *amount;
+                    self.cells[self.pointer] = Wrapping(add_to_u8(self.cells[self.pointer].0, *amount));
                 }
 
                 Instruction::Subtract(amount) => {
-                    self.cells -= *amount;
-                    self.cells[self.pointer] = self.cells[self.pointer].wrapping_sub(*amount)
+                    self.cells[self.pointer] = Wrapping(add_to_u8(self.cells[self.pointer].0, -*amount));
                 }
 
                 Instruction::Output => {
-                    write!(&mut self.out, "{}", (self.cells[self.pointer].0 as char))
+                    let print_char = (self.cells[self.pointer].0 as char);
+                    #[cfg(debug_assertions)]
+                    println!("Printing char {print_char} at position {} with value {}", self.pointer, self.cells[self.pointer]);
+
+                    write!(self.out, "{}", print_char)
                         .expect("Couldn't write to stdout");
                 }
                 Instruction::Input => self.cells[self.pointer] = Wrapping(read_input()),
                 Instruction::Clear => self.cells[self.pointer] = Wrapping(0),
                 Instruction::Multiply { offset, multiplicand } => {
-                    // TODO: Fix this mess
                     let old_pointer = self.pointer;
                     self.offset_to_pointer(*offset);
-                    self.cells[self.pointer] = self.cells[self.pointer]
-                        .wrapping_mul(self.cells[old_pointer].wrapping_mul(*mc));
-                    self.pointer = old_pointer;
-                    self.cells[self.pointer] = Wrapping(0);
+                    self.cells[self.pointer] += multiply_to_u8(self.cells[old_pointer].0, *multiplicand);
+                    self.cells[old_pointer] = Wrapping(0);
                 }
             }
         }
@@ -101,17 +101,28 @@ impl<W: Write> Interpreter<W> {
         }
     }
 }
+
+fn multiply_to_u8(cell: u8, multiplier: isize) -> u8 {
+    (((cell as isize) * multiplier + (u8::MAX as isize)) % (u8::MAX as isize)) as u8
+}
+
+fn add_to_u8(cell: u8, addition: isize) -> u8 {
+    (((cell as isize + addition) + (u8::MAX as isize)) % (u8::MAX as isize)) as u8
+}
+
 fn read_input() -> u8 {
     let mut buf = [0; 1];
     io::stdin().read_exact(&mut buf).unwrap();
     buf[0]
 }
 
+#[cfg(test)]
+const HELLO_WORLD: &str = include_str!("../../brainfuck-example/hello-world.bf");
+
 #[test]
 fn hello_world() {
-    Interpreter::new(stdout()).interpret("Hello World!\n", true);
-    assert_eq!(
-        Interpreter::new(stdout()).interpret_ins(&parser::hello_world()[..]),
-        "Hello World!\n"
-    );
+    let mut out = Vec::new();
+
+    Interpreter::new(&mut out).interpret(HELLO_WORLD, true);
+    assert_eq!(&out[..], "Hello World!".as_bytes())
 }
