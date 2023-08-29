@@ -4,20 +4,13 @@ on:
   push:
     branches: [ main ]
     paths:
-      - benchmarks/*
-      - interpreter/*
-      - lexer/*
-      - parser/*
-      - Cargo.toml
+      - !.github/*
+      - !brainfuck-example/*
   pull_request:
     branches: [ main ]
     paths:
-      - benchmarks/*
-      - interpreter/*
-      - lexer/*
-      - parser/*
-      - Cargo.toml
-
+      - !.github/*
+      - !brainfuck-example/*
 env:
   CARGO_TERM_COLOR: always
 
@@ -29,6 +22,8 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Check
-      run: cargo c --verbose
+      run: cargo clippy --verbose
     - name: Run tests
       run: cargo test --verbose
+    - name: Check formatting
+      run: rustfmt --check
