@@ -25,7 +25,7 @@ pub enum Instruction {
     Clear,
     Output,
     Input,
-    /// Multiply is based on the common brainfuck operation `>+++[<++>--]`.
+    /// Multiply is based on the common brainfuck operation `>+++[<++>-]`.
     /// In this example 3 and 2 are multiplied into cell 0. Mc corresponds to the additions in the loop, the example being 2.
     /// Offset is the amount of offset from the cell where the other value is stored to the result cell
     Multiply { multiplicand: isize, offset: isize },

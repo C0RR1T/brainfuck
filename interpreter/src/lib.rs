@@ -41,7 +41,7 @@ impl<'a, W: Write> Interpreter<'a, W> {
                 }
 
                 Instruction::Output => {
-                    let print_char = (self.cells[self.pointer].0 as char);
+                    let print_char: char = (self.cells[self.pointer].0.into());
                     #[cfg(debug_assertions)]
                     println!("Printing char {print_char} at position {} with value {}", self.pointer, self.cells[self.pointer]);
 

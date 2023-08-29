@@ -1,14 +1,12 @@
 use std::cmp::Ordering;
 use std::vec::IntoIter;
 
-use peekmore::{PeekMore};
+use peekmore::PeekMore;
 
 use parser::Instruction;
-use parser::Instruction::{Clear, Loop, Multiply};
 
 pub struct Optimizer<'a> {
     instructions: &'a [Instruction],
-    index: usize,
 }
 
 impl<'a> Optimizer<'a> {
@@ -24,18 +22,37 @@ impl<'a> Optimizer<'a> {
 
         Optimizer {
             instructions,
-            index: 0,
         }
     }
 
     pub fn optimize(&mut self) -> Vec<Instruction> {
         let mut instructions = Vec::new();
 
-        while let Some(ins) = self.instructions.get(self.index) {
-            if let Some(new_instruction) = self.optimize_instruction(ins.clone()) {
-                instructions.push(new_instruction)
+        while let Some(instruction) = self.next() {
+            match instruction {
+                Instruction::Add(_) => {
+                    let amt = self.combine_tokens(&Instruction::Add(1));
+                    self.consume_elements(amt - 1);
+                    instructions.push(Instruction::Add(amt as isize));
+                },
+                Instruction::Subtract(_) => {
+                    let amt = self.combine_tokens(&Instruction::Subtract(1));
+                    self.consume_elements(amt - 1);
+                    instructions.push(Instruction::Subtract(amt as isize));
+                },
+                Instruction::Left(_) => {
+                    let amt = self.combine_tokens(&Instruction::Left(1));
+                    self.consume_elements(amt - 1);
+                    instructions.push(Instruction::Left(amt as isize));
+                },
+                Instruction::Right(_) => {
+                    let amt = self.combine_tokens(&Instruction::Right(1));
+                    self.consume_elements(amt - 1);
+                    instructions.push(Instruction::Right(amt as isize));
+                },
+
+                _ => instructions.push(instruction.clone())
             }
-            self.index += 1;
         }
 
         #[cfg(debug_assertions)]
@@ -47,186 +64,36 @@ impl<'a> Optimizer<'a> {
                 .collect::<String>()
         );
 
-        Self::finish_optimization(instructions.into_iter())
+        instructions
     }
 
-    fn finish_optimization(ins: IntoIter<Instruction>) -> Vec<Instruction> {
-        let mut new_instructions = Vec::new();
-        let mut iter = ins.peekable();
-        while let Some(instruction) = iter.next() {
-            if let Some(next_ins) = iter.peek() {
-                if let Some(new_ins) = Self::summarize_two_tokens(&instruction, next_ins) {
-                    new_instructions.push(new_ins);
-                    iter.next();
-                }
-            }
-        }
-
-        new_instructions
+    fn combine_tokens(&self, ins: &Instruction) -> usize {
+        self.instructions.into_iter().position(|second_ins| second_ins != ins).map(|val| val + 1).unwrap_or(1)
     }
 
-    fn optimize_instruction(&mut self, ins: Instruction) -> Option<Instruction> {
-        match ins {
-            Loop(loop_instructions) => Self::optimize_loops(&loop_instructions),
-            Clear => {
-                if let Some(Loop(_) | Multiply { .. } | Clear) =
-                    self.instructions.get(self.index + 1)
-                {
-                    self.index += 1;
-                }
-                Some(Clear)
-            }
-            Instruction::Left(_)
-            | Instruction::Right(_)
-            | Instruction::Add(_)
-            | Instruction::Subtract(_) => Some(Self::combine_ins(self.combine_tokens(&ins), &ins)),
-            token => Some(token),
+    fn next(&mut self) -> Option<&'a Instruction> {
+        if self.instructions.len() == 0 {
+            return None;
         }
+
+        let (element, rest) = self.instructions.split_at(1);
+        self.instructions = rest;
+
+        element.get(0)
     }
 
-    fn combine_ins(amt: isize, ins: &Instruction) -> Instruction {
-        match ins {
-            Instruction::Add(_) => Instruction::Add(amt),
-            Instruction::Subtract(_) => Instruction::Subtract(amt),
-            Instruction::Left(_) => Instruction::Left(amt),
-            Instruction::Right(_) => Instruction::Right(amt),
-            _ => unreachable!(),
-        }
+    fn peek(&self) -> Option<&'a Instruction> {
+        self.instructions.get(1)
     }
 
-    fn optimize_loops(ins: &[Instruction]) -> Option<Instruction> {
-        let optimized = Self::summarize_tokens(ins);
-
-        match &optimized[..] {
-            // Clear operation
-            [Instruction::Add(amount)] | [Instruction::Subtract(amount)] if *amount == 1 => {
-                Some(Clear)
-            }
-            // Multiply to the left operation
-            [Instruction::Left(amt_left), Instruction::Add(amt), Instruction::Right(amt_right), Instruction::Subtract(1)]
-            | [Instruction::Right(amt_right), Instruction::Add(amt), Instruction::Left(amt_left), Instruction::Subtract(1)]
-                if amt_left == amt_right =>
-            {
-                Some(Multiply {
-                    multiplicand: *amt,
-                    offset: *amt_right,
-                })
-            }
-             [Instruction::Right(amt_right), Instruction::Subtract(amt), Instruction::Left(amt_left), Instruction::Subtract(1)]
-            | [Instruction::Left(amt_left), Instruction::Subtract(amt), Instruction::Right(amt_right), Instruction::Subtract(1)] if amt_right == amt_left => {
-                 Some(Multiply {
-                     multiplicand: -*amt,
-                     offset: *amt_right,
-                 })
-             }
-
-            // Division operation
-            _ => {
-                if ins.is_empty() {
-                    return None;
-                }
-
-                Some(Loop(ins.to_vec()))
-            }
-        }
+    fn peek_nth(&self, index: usize) -> Option<&'a Instruction> {
+        self.instructions.get(index)
     }
 
-    fn summarize_tokens(instructions: &[Instruction]) -> Vec<Instruction> {
-        let mut iter = instructions.iter();
-
-        let mut new_instructions: Vec<Instruction> = Vec::new();
-
-        while let Some(ins) = iter.next() {
-            match ins {
-                Instruction::Left(_)
-                | Instruction::Right(_)
-                | Instruction::Add(_)
-                | Instruction::Subtract(_) => new_instructions.push(Self::combine_ins(
-                    Self::combine_tokens_iter(&mut iter, ins),
-                    ins,
-                )),
-                token => new_instructions.push(token.clone()),
-            }
-        }
-        new_instructions
-    }
-
-    fn summarize_two_tokens(first: &Instruction, second: &Instruction) -> Option<Instruction> {
-        match first {
-            Instruction::Add(plus) => {
-                if let Instruction::Subtract(minus) = second {
-                    return Self::compare_plus_minus(plus, minus);
-                }
-            }
-            Instruction::Subtract(minus) => {
-                if let Instruction::Add(plus) = second {
-                    return Self::compare_plus_minus(plus, minus);
-                }
-            }
-            Instruction::Left(left) => {
-                if let Instruction::Right(right) = second {
-                    return Self::compare_left_right(left, right);
-                }
-            }
-            Instruction::Right(right) => {
-                if let Instruction::Left(left) = second {
-                    return Self::compare_left_right(left, right);
-                }
-            }
-            _ => {  }
-        }
-        None
-    }
-
-    fn compare_plus_minus(plus: &isize, minus: &isize) -> Option<Instruction> {
-        match plus.cmp(minus) {
-            Ordering::Less => Some(Instruction::Subtract(minus - plus)),
-            Ordering::Equal => None,
-            Ordering::Greater => Some(Instruction::Add(plus - minus)),
-        }
-    }
-
-    fn compare_left_right(left: &isize, right: &isize) -> Option<Instruction> {
-        match left.cmp(right) {
-            Ordering::Less => Some(Instruction::Right(right - left)),
-            Ordering::Equal => None,
-            Ordering::Greater => Some(Instruction::Left(left - right)),
-        }
-    }
-
-    fn combine_tokens(&mut self, instruction_to_cmp: &Instruction) -> isize {
-        Self::combine_tokens_iter(&mut self.instructions.iter(), instruction_to_cmp)
-    }
-
-    fn combine_tokens_iter(
-        ins: &mut std::slice::Iter<'_, Instruction>,
-        instruction_to_cmp: &Instruction,
-    ) -> isize {
-        let mut amount = 1;
-
-        while let Some(instruction) = ins.peekmore().peek_nth((amount) as usize) {
-            if *instruction_to_cmp == **instruction {
-                amount += 1;
-            } else {
-                break;
-            }
-
-            if amount == isize::MAX {
-                break;
-            }
-        }
-
-        for _ in 0..(amount - 1) {
-            ins.next();
-        }
-
-        amount
+    fn consume_elements(&mut self, to: usize) {
+        let (_, items) = self.instructions.split_at(to);
+        self.instructions = items;
     }
 }
 
 
-#[test]
-fn clear_loop() {
-    let opt = Optimizer::new(&[Loop(vec![Instruction::Subtract(1)])]).optimize();
-    assert_eq!(opt, vec![Clear])
-}
